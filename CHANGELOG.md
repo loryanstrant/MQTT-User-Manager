@@ -2,6 +2,8 @@
 
 ## Unreleased — 2026-11-10
 
+- Quote the production tmpfs option string so Compose parses one mount; the initial deploy refused the unquoted flow-list before container creation.
+
 - Record explicit manual browser-testing approval and a separate Dockhand production stack that cannot recreate the shared broker; initial image publication is manual, with automated CI deferred.
 
 - Add offline-tested backend account add/change/remove with exact file validation, preserved unrelated hashes, private newest20 snapshots, atomic publication, reload verification hooks and rollback.
