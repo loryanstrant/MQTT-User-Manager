@@ -1,6 +1,18 @@
 # Deployment checkpoint
 
-**Deployment is approved, but withheld until visual QA and a broker-preserving deployment path pass.** Restarting Mosquitto is not approved.
+**You explicitly approved merge/deployment without agent visual QA on 10 November 2026 at 23:57 AEDT and will test the page yourself.** Browser verification remains unverified, not passed. Restarting Mosquitto is not approved.
+
+## Approved deployment path
+
+Deploy a separate `mqtt-users` Dockhand stack using `compose.production.yaml`, with the existing `mosquitto_default` external network and `pid: container:Mosquitto`. The broker stack is not edited or deployed; this avoids image/config drift recreating the broker. Bind the manager port only to loopback for METROPLEX's host-network Caddy. Check the resolved compose contains only the manager before deploying with pull/build/force-recreate disabled.
+
+Publish a source-revision-labelled, commit-addressed image manually for this initial deployment and verify the pulled image on METROPLEX. Automated CI publishing is deferred; it is not silently claimed to exist. The existing offline release gate remains required.
+
+Back up the root-owned password file privately, verify exact bytes and mode, and change only its UID to 1883 (GID1883/mode0640 unchanged). Retain the protected pre-provision snapshot and broker identity/log baseline. There is no account creation or reload during provisioning. Production add/change/delete tests are deferred to your page test; no existing credential is rotated.
+
+DNS and HTTPS routing must still go through AdGuard/CaddyUI. If named MCP access fails at guarded discovery, leave routing pending rather than bypass the registry or directly modify Caddy. A running manager without its HTTPS route is a partial deployment, not a usable page.
+
+Broker replacement/restart later requires a deliberate manager redeploy to rejoin its new PID namespace; do not restart the broker for this deployment.
 
 ## Verified current facts
 
@@ -8,7 +20,7 @@ Read-only checks on10 November2026: Dockhand environment5 METROPLEX, stack/servi
 
 Admin credential created in Vaultwarden organisation Strant Family, collection LS Development, item **MQTT User Manager - admin**. Browser/test credential must use that item's placeholder, not Rufus's unrelated test login. Production runtime gets hash/session secret through Dockhand secret variables; values never enter repo/compose/transcript. No provider binding has occurred.
 
-## Remaining order
+## Earlier checkpoint (before the manual-testing approval)
 
 1. Restore named Playwright execution through supported wiring; do not bypass registry on guarded failure. The scratch HTTPS network path and exact served script passed in the single post-build review, but the browser call failed before navigation. Start the disposable rig again and exercise login/list/search/sort/no-match/notes/add/change/remove, desktop1440 and narrow380. Save screenshots in `_IMAGES/`; design previews and synthetic JavaScript tests are not built-screen QA.
 2. Verify active Gitea runner/build conventions, add tested CI/image workflow and publish commit-addressed image. Prove METROPLEX pull of that exact artifact. Draft PR is not a release.

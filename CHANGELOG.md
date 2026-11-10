@@ -2,6 +2,8 @@
 
 ## Unreleased — 2026-11-10
 
+- Record explicit manual browser-testing approval and a separate Dockhand production stack that cannot recreate the shared broker; initial image publication is manual, with automated CI deferred.
+
 - Add offline-tested backend account add/change/remove with exact file validation, preserved unrelated hashes, private newest20 snapshots, atomic publication, reload verification hooks and rollback.
 - Block interrupted or failed recovery transactions with persistent markers, including refused rollback over external edits; verify restored contents/metadata and fingerprint through rollback reload.
 - Reclaim expired sign-ins before capacity checks and reset reconnect evidence when log coverage is lost.
