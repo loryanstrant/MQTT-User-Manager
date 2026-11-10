@@ -15,7 +15,9 @@ Password changes/removal **do not disconnect established clients**. Last seen me
 
 On 10 November 2026, the real image built on PERCEPTOR and ran with UID/GID1883, read-only root, dropped capabilities and shared broker PID namespace. Disposable tests passed actual HTTP add/change/delete, old-password refusal, known-valid deleted credential refusal, unchanged unrelated accounts, private backups, rollback, and first add to an existing empty file without `-c`. Six exact password cases (spaces, quotes/backslash, Unicode) passed private options-file verification. The earlier isolated broker proof showed an established subscriber surviving three reloads without reconnection.
 
-**Not deployed.** The single post-build review fixed delayed password-generation responses and the scratch proxy network connection. Scratch HTTPS now serves the exact fixed product script; 125 Python tests and six synthetic asynchronous UI tests pass, and actual disposable HTTP add/change/delete passes again. Playwright execution still stopped at guarded discovery, so no browser layout/click or screenshot pass is claimed. See [verification receipt](docs/verification.md) and [deployment](docs/deployment.md).
+**Partially deployed on 11 November 2026.** The separate manager stack is running on METROPLEX; local liveness, the login shell, exact product JavaScript/CSS and anonymous account-access refusal passed. Mosquitto identity/start time/restart count and all existing credential bytes are unchanged. DNS/HTTPS remain unconfigured because named AdGuard/CaddyUI calls stopped at guarded discovery, so the page is not yet usable from its hostname. Authenticated production operations and your screen test remain pending.
+
+The single post-build review fixed delayed password-generation responses and the scratch proxy network connection. Prior verification: 125 Python tests and six synthetic asynchronous UI tests passed, with actual disposable HTTP add/change/delete. No browser layout/click or screenshot pass is claimed; you explicitly approved deployment for your manual test. See [verification receipt](docs/verification.md) and [deployment](docs/deployment.md).
 
 ## Test
 
