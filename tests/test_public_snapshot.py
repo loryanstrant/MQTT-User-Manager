@@ -127,8 +127,60 @@ def test_allowlist_rejects_private_roots_and_paths():
         ".env",
     ):
         assert not allowed(name)
-    for name in ("README.md", "app/static/icon.png", "docs/screenshots/accounts.png"):
+    for name in (
+        "README.md", "app/static/icon.png", "docs/screenshots/accounts.png",
+        ".github/workflows/container.yml",
+    ):
         assert allowed(name)
+    assert not allowed(".github/workflows/private.yml")
+
+
+def test_export_includes_only_the_public_container_workflow(tmp_path):
+    workflow = b"name: Publish public container\n"
+    repo = committed(tmp_path, {
+        ".github/workflows/container.yml": workflow,
+        ".github/workflows/internal.yml": b"private internal workflow\n",
+    })
+    destination = tmp_path / "public"
+    assert export(repo, "HEAD", destination) == 4
+    assert (destination / ".github/workflows/container.yml").read_bytes() == workflow
+    assert not (destination / ".github/workflows/internal.yml").exists()
+
+
+def test_public_workflow_secret_is_scanned(tmp_path):
+    repo = committed(tmp_path, {
+        ".github/workflows/container.yml": b"-----BEGIN PRIVATE KEY-----",
+    })
+    with pytest.raises(ValueError, match="possible secret"):
+        export(repo, "HEAD", tmp_path / "public")
+
+
+def test_container_workflow_tests_before_publish_and_limits_permissions():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    workflow = (root / ".github/workflows/container.yml").read_text()
+    assert "branches: [main]" in workflow
+    assert "workflow_dispatch:" in workflow
+    assert "pull_request_target" not in workflow
+    assert "packages: write" in workflow and "contents: write" not in workflow
+    assert "if: github.ref == 'refs/heads/main'" in workflow
+    assert "persist-credentials: false" in workflow
+    assert "needs: test" in workflow
+    assert "platforms: linux/amd64" in workflow
+    assert "push: false" in workflow and "load: true" in workflow
+    assert "python tests/container_image_smoke.py" in workflow
+    assert workflow.index("python tests/container_image_smoke.py") < workflow.index("uses: docker/login-action@")
+    assert workflow.index("uses: docker/login-action@") < workflow.index('docker push "$IMAGE_REPOSITORY:sha-$GITHUB_SHA"')
+    assert workflow.index('docker push "$IMAGE_REPOSITORY:sha-$GITHUB_SHA"') < workflow.index('docker push "$IMAGE_REPOSITORY:latest"')
+    assert "${{ secrets.GITHUB_TOKEN }}" in workflow
+    assert "${GITHUB_REPOSITORY,,}" in workflow
+    assert "--cov=app" in workflow and "node --test tests/ui_regressions.cjs" in workflow
+    import re
+
+    actions = re.findall(r"uses: ([^\s]+)", workflow)
+    assert len(actions) >= 5
+    assert all(re.fullmatch(r"[\w/-]+@[a-f0-9]{40}", action) for action in actions)
 
 
 def test_whole_publisher_appends_clean_snapshot_and_is_idempotent(tmp_path):

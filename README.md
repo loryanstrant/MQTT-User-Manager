@@ -17,7 +17,7 @@
 ## Getting started
 
 1. Read the [deployment guide](docs/deployment.md) and [security/recovery constraints](docs/recovery.md).
-2. Build the image: `docker build -t mqtt-user-manager:local .`
+2. Build locally with `docker build -t mqtt-user-manager:local .`, or, after confirming the [first GHCR publication](docs/deployment.md#container-registry), pull `ghcr.io/loryanstrant/mqtt-user-manager:latest`. Set `MQTT_MANAGER_IMAGE` to the chosen image for the manager-only example.
 3. Configure an exact HTTPS `PUBLIC_ORIGIN`, private Werkzeug `ADMIN_PASSWORD_HASH`, independent session key of at least 32 characters and explicit broker hostname. See [.env.example](.env.example).
 4. Prepare the broker-owned password file and private data directory; mount the **whole config directory**, read-only logs and the broker PID namespace. [compose.production.yaml](compose.production.yaml) is a manager-only example; [compose.example.yaml](compose.example.yaml) includes a disposable broker example.
 5. Provide HTTPS on a trusted private network, sign in, and prove a disposable account change before using it with real devices.
@@ -53,6 +53,12 @@ Run one waitress application process, not multiple replicas or workers. All pass
 The manager verifies broker identity and UID before sending SIGHUP, then proves new credentials using a fresh authenticated connection. Deletion confirms exact file removal plus reload signalling, not forced logout. A compromised manager would still have access to the mounted config directory and shared broker PID namespace; these are deliberate privileges.
 
 The upstream image floats at `eclipse-mosquitto:latest`; tested client-tool compatibility is Mosquitto binary 2.1.2. Re-run private-input and container tests on upstream changes. SHA512-PBKDF2 is the tested default; optional Argon2 generation is not integration-approved. Python cannot promise secure erasure of transient secret memory.
+
+## Container publishing
+
+GitHub Actions tests each public `main` snapshot, builds a Linux AMD64 image and runs a network-isolated container smoke check before publishing that exact image to GHCR. It publishes `ghcr.io/loryanstrant/mqtt-user-manager:latest` and a `sha-<full-public-commit>` tag. The image's source/revision labels refer to the public GitHub snapshot, not private history. ARM images are not currently built or verified.
+
+The smoke check verifies startup, bundled client tools, exact served assets, administrator sign-in, access protection and logout with temporary generated credentials. It never contacts a live broker; disposable broker integration and deployment verification remain separate gates. See [deployment](docs/deployment.md#container-registry) for package visibility and first-publication setup.
 
 ## Project
 

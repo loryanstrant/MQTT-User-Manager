@@ -11,6 +11,7 @@ EXACT = {
     ".dockerignore",
     ".env.example",
     ".gitignore",
+    ".github/workflows/container.yml",
     "AGENTS.md",
     "CHANGELOG.md",
     "Dockerfile",
