@@ -7,6 +7,7 @@ import json
 import os
 import secrets
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -23,8 +24,21 @@ def docker(*args, data=None, timeout=90):
     except (OSError, subprocess.TimeoutExpired):
         raise SmokeFailure(f"Disposable image {args[0]} failed; output withheld") from None
     if result.returncode:
+        if args[:2] == ("rm", "-f") and "No such container:" in result.stderr:
+            return ""
         raise SmokeFailure(f"Disposable image {args[0]} refused; output withheld")
     return result.stdout
+
+
+def remove_containers(*names):
+    failed = False
+    for name in names:
+        try:
+            docker("rm", "-f", name)
+        except SmokeFailure:
+            failed = True
+    if failed:
+        raise SmokeFailure("Disposable image cleanup failed; check test containers; output withheld")
 
 
 # Runs inside the container. The generated credential arrives only through stdin.
@@ -94,23 +108,23 @@ def smoke(image):
     name = "rufus-scratch-mqtt-image-" + secrets.token_hex(6)
     with tempfile.TemporaryDirectory(prefix="image-smoke-", dir=scratch) as directory:
         directory = Path(directory)
-        admin = secrets.token_urlsafe(32)
-        # Generate the hash using the image's own dependency set, not host packages.
-        password_hash = docker(
-            "run", "--rm", "-i", "--network", "none", "--name", name + "-hash",
-            "--entrypoint", "python", image, "-c",
-            "from werkzeug.security import generate_password_hash; "
-            "print(generate_password_hash(input(), method='pbkdf2:sha256:600000'))",
-            data=admin + "\n",
-        ).strip()
-        env = directory / "manager.env"
-        env.write_text(
-            "PUBLIC_ORIGIN=https://mqtt-users.example.invalid\nADMIN_USERNAME=admin\n"
-            "ADMIN_PASSWORD_HASH=" + password_hash + "\nSECRET_KEY="
-            + secrets.token_urlsafe(48) + "\n",
-        )
-        env.chmod(0o600)
         try:
+            admin = secrets.token_urlsafe(32)
+            # Generate the hash using the image's own dependency set, not host packages.
+            password_hash = docker(
+                "run", "--rm", "-i", "--network", "none", "--name", name + "-hash",
+                "--entrypoint", "python", image, "-c",
+                "from werkzeug.security import generate_password_hash; "
+                "print(generate_password_hash(input(), method='pbkdf2:sha256:600000'))",
+                data=admin + "\n",
+            ).strip()
+            env = directory / "manager.env"
+            env.write_text(
+                "PUBLIC_ORIGIN=https://mqtt-users.example.invalid\nADMIN_USERNAME=admin\n"
+                "ADMIN_PASSWORD_HASH=" + password_hash + "\nSECRET_KEY="
+                + secrets.token_urlsafe(48) + "\n",
+            )
+            env.chmod(0o600)
             # No network, broker namespace, host bind mount or published port.
             docker(
                 "run", "-d", "--name", name, "--network", "none", "--read-only",
@@ -144,10 +158,14 @@ def smoke(image):
             )
             assert "Image HTTP, exact assets, login, Origin guard and logout passed" in result
         finally:
-            # Removing this exact randomly named test container never affects a broker.
-            remaining = docker("ps", "-aq", "--filter", "name=^/" + name + "$")
-            if remaining.strip():
-                docker("rm", "-f", name)
+            # Docker timeouts can leave either exact disposable name running.
+            primary_failure = sys.exc_info()[0] is not None
+            try:
+                remove_containers(name, name + "-hash")
+            except SmokeFailure:
+                if not primary_failure:
+                    raise
+                print("Disposable cleanup also failed; check test containers; output withheld", file=sys.stderr)
     print("Disposable image smoke passed; container and private test files removed")
 
 

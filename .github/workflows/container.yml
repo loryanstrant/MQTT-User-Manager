@@ -74,6 +74,17 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish the exact tested image
         run: |
-          docker tag "$IMAGE_REPOSITORY:sha-$GITHUB_SHA" "$IMAGE_REPOSITORY:latest"
           docker push "$IMAGE_REPOSITORY:sha-$GITHUB_SHA"
-          docker push "$IMAGE_REPOSITORY:latest"
+          echo "● Revision image uploaded: $IMAGE_REPOSITORY:sha-$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          # Old manual reruns may publish a revision, but must not roll latest back.
+          current_main=$(git ls-remote --exit-code "https://github.com/$GITHUB_REPOSITORY.git" refs/heads/main | cut -f1)
+          if [ "$current_main" != "$GITHUB_SHA" ]; then
+            echo "○ Latest unchanged: this run is no longer the main tip." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          docker tag "$IMAGE_REPOSITORY:sha-$GITHUB_SHA" "$IMAGE_REPOSITORY:latest"
+          if ! docker push "$IMAGE_REPOSITORY:latest"; then
+            echo "○ Latest upload failed; the revision image was already uploaded. Check registry state before rerunning." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "● Latest uploaded: $IMAGE_REPOSITORY:latest" >> "$GITHUB_STEP_SUMMARY"
