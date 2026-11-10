@@ -10,4 +10,5 @@
 - Add approved searchable/sortable account screen, bounded dialogs, notes, generated/copyable passwords and sequential progress polling; unknown outcomes keep page mutations blocked.
 - Wire real private-options fresh-CONNECT verifier with incorrect-password refusal, bounded retries and no secret argv. Verify root-started/droppriv broker identity using readable comm/argv/UID rather than denied exe link.
 - Build and run image with real disposable HTTP add/change/remove, rollback and exact password round-trip checks; expand offline tests to125.
-- Document visual QA discovery failure and scratch proxy network failure. No production deployment or restart is claimed.
+- In the single post-build review, invalidate stale generated-password replies after cancel/Escape/pagehide, manual edits, overlapping requests and save; clear payload password references on failed operation requests. Six synthetic JavaScript regressions pass.
+- Repair disposable preview reachability using a second manager interface on the verified Rufus preview network; keep its broker isolated. Exact fixed script served through HTTPS and actual disposable API proof pass again. Guarded Playwright execution still fails, so visual QA and production deployment remain pending. No production restart is claimed.

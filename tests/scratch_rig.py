@@ -114,6 +114,14 @@ os.chown(p,1883,1883); os.chmod(p,0o640)
         f"type=volume,source={PREFIX}-data,destination=/data,volume-subpath=data",
         IMAGE,
     )
+    # Rufus already publishes preview ports. Give only our disposable manager a
+    # second interface reachable from that namespace; the broker stays isolated.
+    preview_networks = json.loads(
+        run("inspect", "Rufus", "--format", "{{json .NetworkSettings.Networks}}")
+    )
+    if len(preview_networks) != 1:
+        raise RuntimeError("Choose the verified Rufus preview network before starting the proxy")
+    run("network", "connect", next(iter(preview_networks)), PREFIX + "-manager")
     run(
         "run",
         "-d",
@@ -128,13 +136,7 @@ os.chown(p,1883,1883); os.chmod(p,0o640)
         "--from",
         "https://perceptor.strant.casa:8708",
         "--to",
-        run(
-            "inspect",
-            PREFIX + "-manager",
-            "--format",
-            "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}",
-        ).strip()
-        + ":8080",
+        PREFIX + "-manager:8080",
         "--internal-certs",
     )
     print("Disposable broker, manager and HTTPS proxy started. Credentials not shown.")

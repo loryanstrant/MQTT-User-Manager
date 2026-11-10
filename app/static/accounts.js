@@ -4,7 +4,8 @@ let csrf = '', busy = false, editAction = 'add', selected = null, sort = 'userna
 const titles = {username: 'Account', note: 'What it’s for', status: 'Connection', last_seen: 'Last seen'};
 const rotationWarning = 'Changing this password will not update the device. It may keep working until it reconnects, then it will be refused until you put the new password into it.';
 function feedback(id, text) { $(id).textContent = text; $(id).hidden = !text; }
-function clearSecrets() { $('account-password').value = ''; $('admin-password').value = ''; }
+let generationVersion = 0;
+function clearSecrets() { generationVersion++; $('account-password').value = ''; $('admin-password').value = ''; }
 function showLogin() {
   clearSecrets(); $('edit-dialog').close(); $('remove-dialog').close();
   $('rows').replaceChildren(); $('accounts-panel').hidden = true; $('logout').hidden = true; $('login-panel').hidden = false;
@@ -64,9 +65,15 @@ async function loadAccounts() {
   }
 }
 async function generated() {
-  try { $('account-password').value = (await api('/api/passwords/generate', 'POST', {})).password; }
-  catch (error) { feedback('edit-feedback', error.message); }
+  if (busy || !$('edit-dialog').open || editAction === 'note') return;
+  const version = ++generationVersion;
+  const current = () => version === generationVersion && !busy && $('edit-dialog').open && editAction !== 'note';
+  try {
+    const result = await api('/api/passwords/generate', 'POST', {});
+    if (current()) $('account-password').value = result.password;
+  } catch (error) { if (current()) feedback('edit-feedback', error.message); }
 }
+$('account-password').addEventListener('input', () => { generationVersion++; });
 async function openEdit(action, account = null) {
   if (busy) return;
   selected = account; editAction = action; clearSecrets();
@@ -90,7 +97,7 @@ function openRemove(account) {
   $('remove-dialog').showModal(); $('remove-name').focus();
 }
 async function operation(data, id, dialog) {
-  busy = true; $('edit-save').disabled = true; $('remove-save').disabled = true; $('edit-cancel').disabled = true; $('remove-cancel').disabled = true; $('generate').disabled = true; $('logout').disabled = true;
+  busy = true; generationVersion++; $('edit-save').disabled = true; $('remove-save').disabled = true; $('edit-cancel').disabled = true; $('remove-cancel').disabled = true; $('generate').disabled = true; $('logout').disabled = true;
   feedback(id, '◐ Checking the account change…');
   let resolved = false;
   try {
@@ -109,6 +116,7 @@ async function operation(data, id, dialog) {
     throw new Error('The operation result is still unknown. Refresh the list and check the recovery warning; do not resubmit.');
   } catch (error) { feedback(id, '○ ' + error.message); }
   finally {
+    data.password = undefined;
     busy = !resolved; clearSecrets(); $('edit-save').disabled = !resolved; $('edit-cancel').disabled = false; $('remove-cancel').disabled = false; $('logout').disabled = !resolved; $('generate').disabled = !resolved;
     $('remove-save').disabled = !resolved || $('remove-name').value !== selected?.username;
     if (!resolved) feedback('page-feedback', '◐ Outcome unknown. Further changes are blocked in this page. Refresh to inspect the accounts and recovery warning; do not repeat the change blindly.');

@@ -15,7 +15,7 @@ Password changes/removal **do not disconnect established clients**. Last seen me
 
 On 10 November 2026, the real image built on PERCEPTOR and ran with UID/GID1883, read-only root, dropped capabilities and shared broker PID namespace. Disposable tests passed actual HTTP add/change/delete, old-password refusal, known-valid deleted credential refusal, unchanged unrelated accounts, private backups, rollback, and first add to an existing empty file without `-c`. Six exact password cases (spaces, quotes/backslash, Unicode) passed private options-file verification. The earlier isolated broker proof showed an established subscriber surviving three reloads without reconnection.
 
-**Not deployed.** Browser QA stopped at guarded Playwright discovery, and the scratch HTTPS proxy could not reach the isolated manager network. These are not visual passes. Current API template checks prove served markup, not browser layout or click behavior. See [verification receipt](docs/verification.md) and [deployment](docs/deployment.md).
+**Not deployed.** The single post-build review fixed delayed password-generation responses and the scratch proxy network connection. Scratch HTTPS now serves the exact fixed product script; 125 Python tests and six synthetic asynchronous UI tests pass, and actual disposable HTTP add/change/delete passes again. Playwright execution still stopped at guarded discovery, so no browser layout/click or screenshot pass is claimed. See [verification receipt](docs/verification.md) and [deployment](docs/deployment.md).
 
 ## Test
 
@@ -25,6 +25,7 @@ devenv
 python -m pytest -q --cov=app --cov-report=term-missing
 ruff check app tests wsgi.py
 node --check app/static/accounts.js
+node --test tests/ui_regressions.cjs
 docker build -t mqtt-user-manager:local .
 ```
 

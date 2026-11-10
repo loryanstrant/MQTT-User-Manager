@@ -18,6 +18,18 @@ No built-screen screenshots. The approved saved images remain **design previews 
 
 Production Mosquitto identity, image, StartedAt and restart count matched before/after this work. Only read-only live checks ran. Password file remains root:1883 mode0640, config directory1883:1883; manager currently requires broker-owned file, so provisioning must intentionally resolve this without weakening checks. No new production account, route, secret stack binding, image push or stack deployment occurred.
 
-## Review outcome
+## Single post-build review — 10 November 2026
+
+Read the complete committed diff and all changed source/tests/docs; no uncommitted changes existed at entry. Applied the review/verify checklist, including the impact sweep (19 Python files parsed, none unparsed). Its capped symbol/consumer lists and non-Python files were covered by direct full-file reading. Code-graph execution failed at guarded discovery, not a proved absence of an index.
+
+- Confirmed and fixed delayed generated-password replies repopulating cleared fields or replacing a newer password choice. Revision guards invalidate on manual input, clearing/dismissal, overlapping generation and operation start; stale errors are ignored. Submitted payload password references clear in `finally`, including unknown start outcomes. Bounded independent consultant opinion was grounded by synthetic execution, not treated as a test result.
+- Six complete-product-script synthetic DOM/async regressions failed before the fix and pass after it: cancel/Escape/pagehide, manual override, out-of-order replies, reopened dialog/stale errors, unknown-operation clearing/locking, and closed/note editor refusal. These are not browser layout evidence. Run `node --test tests/ui_regressions.cjs`.
+- Full offline gate:125 Python tests,92% app coverage, ruff clean and JavaScript syntax clean. Rebuilt image `e8b23b562458` ran the actual disposable HTTP add/change/delete proof again, refusing old and deleted known-valid credentials, preserving every unrelated line and mode0640; receipt `_IMAGES/mqtt-post-review-api-proof.json` in session c204b6db2dbf.
+- Fixed scratch network path: Rufus already reserves8700–8719, so a separate publication failed before proxy start. The disposable manager now joins the verified Rufus preview network in addition to its broker network; its broker remains isolated and neither exposes a host port. A scratch Caddy process sharing Rufus's existing preview namespace serves the manager by network name. HTTPS liveness and byte-for-byte served fixed `accounts.js` passed. No shared Caddy route/config changed.
+- Playwright execution again failed at guarded discovery before navigation. No login, interaction, screenshots, clipboard, cross-tab/refresh or layout execution is claimed, and the uncertain call was not replayed. All disposable containers, network, volume and local credential/env files were removed. Production was not accessed or changed during this review.
+
+Deferred unchanged: real desktop/380px browser checks, production ownership provisioning, CI/registry artifact and broker-preserving deployment. The documented uncooperative-writer race remains an explicit maintenance constraint, not silently weakened. No second review pass was run.
+
+## Earlier build review outcome
 
 Bounded consultant review identified unknown-result unlock, password serialization and listener-policy proof concerns. Page keeps mutation controls blocked on unknown result rather than enabling Save after timeout; exact serialization tested with actual client; verifier refuses an incorrectly accepted random password. Polling is sequential. Endpoint policy/identity and refresh/cross-tab behavior still need deployment/browser checks. The consultant opinion was not execution evidence.
