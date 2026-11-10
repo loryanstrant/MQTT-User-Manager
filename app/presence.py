@@ -15,7 +15,7 @@ CONNECT = re.compile(
     r"New client connected from .+ as (\S{1,256}) \([^\n]*?u['\"]([^'\"]{1,128})['\"][^\n]*\)\.?$"
 )
 DISCONNECT = re.compile(
-    r"Client (\S{1,256}) (?:disconnected(?:.*)?|closed its connection\.?|has exceeded timeout, disconnecting\.?|has been disconnected.*|already connected, closing old connection\.?)$"
+    r"Client (\S{1,256})(?: \[[^\]\s]{1,256}\])? (?:disconnected(?:.*)?|closed its connection\.?|has exceeded timeout, disconnecting\.?|has been disconnected.*|already connected, closing old connection\.?)$"
 )
 STAMP = re.compile(
     r"^(\d{10}(?:\.\d+)?|\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:?\d\d)?):?\s+(.*)$"

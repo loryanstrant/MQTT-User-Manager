@@ -28,7 +28,31 @@ CaddyUI server/proxy lookups and AdGuard rewrite-list calls also stopped at guar
 
 Final read-only comparison: Mosquitto container ID/image/start time/restart count unchanged and every original password-file line unchanged. Production account operations, client-continuity observation and actual screen testing remain pending.
 
-## Verified current facts
+## Successful manager deployment — 11 November 2026
+
+You asked again to deploy at 06:54 AEDT. Dockhand job `2db7d5b9-62ac-4cea-83c7-41812e919c8f` accepted only the existing `mqtt-users` stack, with build/pull/force-recreate disabled. The actual `MQTT-Users` container started at 07:04:16 AEDT and is running with zero restarts; the image revision is `82db1c57149d24df8a8b34564a9ad5bceb8e621e` and digest matches the previously published image.
+
+Checked the saved compose and actual runtime: manager-only stack, UID/GID1883, shared Mosquitto PID namespace, read-only root, dropped capabilities, complete bounded tmpfs options, existing external broker network and loopback-only port8090. Local `/healthz` returns `status:ok`; `/` serves the login shell, and served JavaScript/CSS match the merged product bytes exactly. Anonymous `/api/accounts` returns401. Liveness is not a broker-operation readiness test.
+
+Mosquitto container identity/image/start time and zero restart count match the pre-deploy baseline. Every original account byte matches the protected pre-provision snapshot. No production account add/change/delete, broker reload or restart ran. Client continuity and fresh credential verification have not been tested in production.
+
+Named CaddyUI server discovery and AdGuard rewrite listing failed at guarded discovery before execution; neither call was automatically retried or bypassed. `mqtt-users.strant.casa` does not resolve. No DNS/HTTPS route was added, and the manager port deliberately remains loopback-only rather than exposing a plaintext login. This is a partial deployment, not an available web page. Vault unlock was not present in the turn, so no authenticated production login is claimed. Browser/manual page checks remain pending.
+
+Secret-free deployment receipt: `_IMAGES/mqtt-production-deploy-receipt.json` in session `c204b6db2dbf`. Next supported action: restore named AdGuard/CaddyUI access, provision the existing intended hostname on METROPLEX, then perform the authenticated/manual page checks. Do not deploy or restart Mosquitto.
+
+## HTTPS address completed — 11 November 2026
+
+**Available for your manual test:** https://mqtt-users.strant.casa on LAN/WireGuard. Named AdGuard/CaddyUI reads succeeded this turn; the prior guarded errors were not bypassed. Verified no existing manager rewrite or METROPLEX route before creation. AdGuard origin rewrite points to `192.168.169.10`. CaddyUI server8 (METROPLEX), proxy173, forwards to `http://127.0.0.1:8090`, uses existing certificate22, forces HTTPS and is enabled. Proxy security-header manipulation and access logging are disabled; upstream security headers are retained. No other proxy host was edited.
+
+Observed at approximately 07:27 AEDT: origin/default DNS return the intended private address. Actual HTTPS validates its certificate without an insecure bypass. `/` serves the login shell; `/healthz` returns the expected liveness JSON; served CSS/JavaScript match the product bytes; anonymous `/api/accounts` returns401. CSP, anti-sniffing, frame and HSTS headers are present, and HTTP redirects to HTTPS. The backend port remains loopback-only. Caddy and Mosquitto container start times and zero restart counts match the preceding baseline; original credential bytes still match the protected pre-provision backup. No production account write or broker reload ran.
+
+Secret-free receipt: `_IMAGES/mqtt-https-verification.json` in session `c204b6db2dbf`. The vault was locked, so authenticated production login/operations were not exercised. Browser checks remain unverified under your explicit manual-testing decision. These web-address checks do not establish add/change readiness or ongoing-client continuity. Next: sign in with shared Vaultwarden item `MQTT User Manager - admin` and test a disposable account, leaving existing accounts unchanged.
+
+### Certificate tool disclosure — pending your decision
+
+The named CaddyUI `list_certificates` tool unexpectedly returned `key_pem` values for METROPLEX's `strant.casa` and `strant.com` wildcard certificates into the session tool transcript. Do not reproduce those values in documentation, reports or tests. The values were not saved into this repository or intentionally forwarded elsewhere, and the listing was not repeated. A coordination message to the MCP-security session was not delivered because that session was archived. You were informed in chat/status. Rotation/revocation and sanitizing the tool response remain separate follow-up decisions; no wildcard certificate was rotated or replaced by this task.
+
+## Historical pre-provision facts
 
 Read-only checks on10 November2026: Dockhand environment5 METROPLEX, stack/service key `mosquitto`, container `Mosquitto` running, zero restarts. Account file `/home/docker/Mosquitto/config/passwords` root:1883 mode0640, directory1883:1883. Broker PID1 `/usr/sbin/mosquitto`, all UIDs1883; `comm` and `cmdline` readable, `exe` link denied. Port8090 unoccupied at check time. Re-check before deploying.
 

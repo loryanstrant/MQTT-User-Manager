@@ -1,4 +1,13 @@
-# Verification receipt — 10 November 2026
+# Verification receipt
+
+## Presence diagnosis and fix — 11 November 2026
+
+- Read-only METROPLEX checks at approximately 07:54 AEDT: manager can read the correctly mounted broker log; both containers are running with unchanged start times and zero restarts. The current log has one successful internal verifier connection and no non-verifier device connections for each of `living-room-tv`, `bedroom-tv` and `garage-tv`. Blank device last seen is therefore expected, not a failed account addition. The current log is not an unlimited connection archive.
+- Reproduced a separate tracker defect: deployed disconnect parser ignores bracketed peer addresses, leaving observed sessions connected. Thirteen new synthetic cases failed before the fix. Fixed bounded optional-address parsing; 138 Python tests pass with 92% app coverage, ruff/JavaScript syntax/diff checks pass, and all six existing synthetic page regressions pass. Independent bounded consultant review reported no blocking issue; it did not execute tests.
+- Actual log-format read-only comparison: old regex matches zero of 11,158 candidate disconnect events; corrected regex matches 11,155. The three remaining events have whitespace-containing client IDs, which both existing connect/disconnect tracking exclude. That pre-existing limitation is not fixed here. No live log or password material was copied into tests.
+- Corrected parser was exercised in a separate temporary Python process inside the existing manager, reading logs only; the running application was not patched or restarted. Internal verifier exclusion remains intact. This source fix is not deployed yet. No authenticated account mutation, broker reload/restart or connected-client disruption occurred during diagnosis. Browser verification remains as previously deferred; no screen markup or JavaScript changed.
+
+## Initial verification — 10 November 2026
 
 ## Proven in this session
 

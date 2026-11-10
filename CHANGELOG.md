@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased — 2026-11-10
+## Unreleased — 2026-11-11
+
+- Fix log-observed disconnects when the broker includes a bracketed peer address, including IPv4/IPv6, so closed sessions no longer remain connected and last seen advances correctly. Preserve shared-user sessions and internal-verifier exclusion; credential creation is not device activity.
+
+## Initial implementation — 2026-11-10
 
 - Quote the production tmpfs option string so Compose parses one mount; the initial deploy refused the unquoted flow-list before container creation.
 
