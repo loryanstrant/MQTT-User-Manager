@@ -2,6 +2,12 @@
 
 ## Unreleased — 2026-11-11
 
+- Cover disposable-container cleanup after timeouts, refuse stale-main promotion to latest, and report partial registry publication explicitly with offline regression tests.
+
+- Add a public GitHub Actions workflow that runs offline gates, builds a Linux AMD64 container, exercises startup/auth/assets with generated private test credentials in a network-isolated disposable container, then uploads that exact image to GHCR with source-revision and latest tags.
+- Allowlist only the public container workflow in clean snapshots, keeping other workflow files and canonical publishing history private. Document first-upload package visibility and workflow-file credential permissions.
+- Use maintainer-approved real-system screenshots for publication with private names, notes and identifiers redacted rather than substituted with synthetic data; actual captures remain pending browser access.
+
 - Select Python 3.12 explicitly for public publication validation so pinned test dependencies match the verified development runtime.
 
 - Add the account-to-devices icon, multi-size favicon and labelled official GitHub-mark header link.
