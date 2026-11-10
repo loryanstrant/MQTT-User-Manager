@@ -1,6 +1,5 @@
 # Floating upstream image by house standard; compatibility target is Mosquitto binary 2.1.2.
-# Parent measured eclipse-mosquitto:latest binary 2.1.2 on 2026-11-10; no :2.1.2 tag exists in its pull check.
-# Built and booted on PERCEPTOR 2026-11-10; production deployment remains gated.
+# Disposable integration tested binary 2.1.2; reverify tools on upstream image changes.
 FROM eclipse-mosquitto:latest
 
 USER root

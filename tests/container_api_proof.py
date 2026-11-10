@@ -1,18 +1,20 @@
 """Run INSIDE disposable manager only, proving real HTTP and broker behavior."""
 
 import json
+import os
 import secrets
 import sys
 import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from app.passwd import parse_password_file
 from app.verifier import FreshConnectVerifier
 
-HOST = "perceptor.strant.casa:8708"
-ORIGIN = "https://" + HOST
+ORIGIN = os.environ["PUBLIC_ORIGIN"]
+HOST = urlsplit(ORIGIN).netloc
 cookie = ""
 csrf = ""
 

@@ -171,6 +171,13 @@ class PresenceTracker:
                         if len(line) <= 4096:
                             self._line(line.decode("utf-8", errors="replace"))
                         else:
+                            # A skipped line may contain a disconnect. Do not let
+                            # pre-gap sessions suppress the per-row warning.
+                            self.sessions.clear()
+                            self.reconnections.clear()
+                            self.observed = OrderedDict(
+                                (name, (value[0], None)) for name, value in self.observed.items()
+                            )
                             self.incomplete = True
                     self.offset = start + len(complete)
                     stream.seek(max(0, self.offset - 64))
@@ -223,6 +230,11 @@ class PresenceTracker:
                     if stamp
                     else None,
                     "log_incomplete": self.incomplete,
+                    # Positive observed presence can resolve this row without
+                    # claiming complete history or an exact/live session count.
+                    # A retained timestamp alone cannot restore certainty after
+                    # a gap or rule out unseen parallel sessions on disconnect.
+                    "presence_uncertain": self.incomplete and (not self.available or not count),
                     "source": "log observation",
                 }
             return result

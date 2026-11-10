@@ -1,12 +1,14 @@
 """Explicit disposable broker/UI rig. No production host or account material."""
 
 import json
+import os
 import secrets
 import subprocess
 from pathlib import Path
 
-PREFIX = "rufus-scratch-mqtt-c204b6db"
-IMAGE = "rufus-scratch-mqtt-manager:c204b6db"
+PREFIX = "rufus-scratch-mqtt-preview"
+IMAGE = os.environ.get("MQTT_SCRATCH_IMAGE", "mqtt-user-manager:local")
+ORIGIN = os.environ.get("MQTT_SCRATCH_ORIGIN", "https://mqtt-preview.example.invalid:8708")
 
 
 def run(*args, data=None, check=True):
@@ -19,10 +21,16 @@ def run(*args, data=None, check=True):
 
 
 def setup():
+    from app.auth import canonical_origin
+
+    canonical_origin(ORIGIN)
+    preview_container = os.environ.get("MQTT_PREVIEW_CONTAINER")
+    if not preview_container:
+        raise RuntimeError("Configure the preview container before creating scratch resources")
     root = Path(".scratch")
     root.mkdir(mode=0o700, exist_ok=True)
     values = {"existing": secrets.token_urlsafe(24), "session": secrets.token_urlsafe(48)}
-    # Admin password supplied by parent from vault via stdin; never echo.
+    # Scratch admin password supplied privately via stdin; never echo.
     import sys
 
     values["admin"] = sys.stdin.read().strip()
@@ -81,7 +89,7 @@ os.chown(p,1883,1883); os.chmod(p,0o640)
 
     env = root / "manager.env"
     env.write_text(
-        "PUBLIC_ORIGIN=https://perceptor.strant.casa:8708\nADMIN_USERNAME=admin\nADMIN_PASSWORD_HASH="
+        "PUBLIC_ORIGIN=" + ORIGIN + "\nADMIN_USERNAME=admin\nADMIN_PASSWORD_HASH="
         + generate_password_hash(values["admin"], method="pbkdf2:sha256:600000")
         + "\nSECRET_KEY="
         + values["session"]
@@ -114,13 +122,13 @@ os.chown(p,1883,1883); os.chmod(p,0o640)
         f"type=volume,source={PREFIX}-data,destination=/data,volume-subpath=data",
         IMAGE,
     )
-    # Rufus already publishes preview ports. Give only our disposable manager a
-    # second interface reachable from that namespace; the broker stays isolated.
+    # The configured preview container must already publish the preview port.
+    # Give only the disposable manager a second interface; keep the broker isolated.
     preview_networks = json.loads(
-        run("inspect", "Rufus", "--format", "{{json .NetworkSettings.Networks}}")
+        run("inspect", preview_container, "--format", "{{json .NetworkSettings.Networks}}")
     )
     if len(preview_networks) != 1:
-        raise RuntimeError("Choose the verified Rufus preview network before starting the proxy")
+        raise RuntimeError("Choose a single verified preview network before starting the proxy")
     run("network", "connect", next(iter(preview_networks)), PREFIX + "-manager")
     run(
         "run",
@@ -128,13 +136,13 @@ os.chown(p,1883,1883); os.chmod(p,0o640)
         "--name",
         PREFIX + "-https",
         "--network",
-        "container:Rufus",
+        "container:" + preview_container,
         "--entrypoint",
         "caddy",
         "caddy:latest",
         "reverse-proxy",
         "--from",
-        "https://perceptor.strant.casa:8708",
+        ORIGIN,
         "--to",
         PREFIX + "-manager:8080",
         "--internal-certs",

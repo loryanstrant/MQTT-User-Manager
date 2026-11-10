@@ -1,8 +1,8 @@
-# Example only. Parent/deployer must prove container/client mechanics and supply a broker config.
+# Example only. Deployer must prove container/client mechanics and supply a broker config.
 # No production credentials, fleet paths, Docker socket, or deployment actions here.
 services:
   mosquitto:
-    image: eclipse-mosquitto:latest # Floating per house rule; binary 2.1.2 compatibility measured by parent 2026-11-10.
+    image: eclipse-mosquitto:latest # Floating upstream; reverify client compatibility on image updates.
     container_name: Mosquitto-Example
     user: "1883:1883"
     restart: unless-stopped
@@ -19,7 +19,7 @@ services:
     container_name: MQTT-User-Manager
     restart: unless-stopped
     user: "1883:1883"
-    pid: "service:mosquitto" # Parent must prove broker is PID1; this shares PIDs, NOT network.
+    pid: "service:mosquitto" # Deployer must prove broker is PID1; this shares PIDs, NOT network.
     depends_on: [mosquitto]
     ports: ["127.0.0.1:8080:8080"] # Put HTTPS/LAN ingress in the approved routing surface.
     volumes:
@@ -40,10 +40,10 @@ services:
       MQTT_PROTECTED_ACCOUNTS: homeassistant,zigbee2mqtt
       MQTT_PASSWD_STDIN_VERIFIED: "true"
     read_only: true
-    tmpfs: [/tmp:rw,noexec,nosuid,size=4m,mode=1777] # Private ephemeral client configs only; never screenshots.
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=4m,mode=1777"] # Private ephemeral client configs only; never screenshots.
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     networks: [mqtt]
 
 networks:
-  mqtt: {} # Deployer chooses verified free host-specific subnet; no guessed fleet subnet here.
+  mqtt: {} # Deployer chooses a suitable private network for this deployment.

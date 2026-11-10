@@ -1,53 +1,57 @@
 # MQTT User Manager
 
-**Add MQTT accounts and change their passwords from a private web page.** Keeps Mosquitto's existing password-file authentication rather than migrating accounts.
+**Create MQTT accounts and change their passwords from a private web page.** Keep Mosquitto's existing password-file authentication instead of migrating accounts or replacing the broker.
 
-## What you get
+## Features
 
-1. One searchable, sortable account table, editable notes and log-observed connection status.
-2. Add/change/remove dialogs, generated passwords you can replace/copy, and protected removal of Home Assistant/Zigbee2MQTT accounts.
-3. Hashed admin login, short revocable sessions, exact-Origin/CSRF protection and visible operation progress.
-4. Private backups, exact unrelated-account preservation, atomic writes, verified fresh logins and rollback; interrupted transactions block further changes.
+- Searchable, sortable account table with editable device notes and log-observed connection status.
+- Add, change-password and remove dialogs; strong generated passwords you can override and copy.
+- Hashed administrator login, revocable 30-minute sessions, Origin/CSRF checks and visible operation progress.
+- Strict password-file validation, exact unrelated-account preservation, private backups, atomic updates and rollback.
+- JSON API for tools using the same authenticated session and operation-polling contract as the page.
 
-Password changes/removal **do not disconnect established clients**. Last seen means the last logged connection event, not a live message/keepalive check. Desktop is the approved layout; the table scrolls sideways at narrow widths. No mobile app, broker replacement, ACL migration or Docker socket.
+**Password changes and removal do not disconnect established clients.** Last seen is the last observed connection event, not the last message or a live device check. The desktop table scrolls sideways on narrow screens. No mobile app, Docker socket, broker replacement or ACL migration is required.
 
-## Current verification and release state
+## Getting started
 
-On 10 November 2026, the real image built on PERCEPTOR and ran with UID/GID1883, read-only root, dropped capabilities and shared broker PID namespace. Disposable tests passed actual HTTP add/change/delete, old-password refusal, known-valid deleted credential refusal, unchanged unrelated accounts, private backups, rollback, and first add to an existing empty file without `-c`. Six exact password cases (spaces, quotes/backslash, Unicode) passed private options-file verification. The earlier isolated broker proof showed an established subscriber surviving three reloads without reconnection.
+1. Read the [deployment guide](docs/deployment.md) and [security/recovery constraints](docs/recovery.md).
+2. Build the image: `docker build -t mqtt-user-manager:local .`
+3. Configure an exact HTTPS `PUBLIC_ORIGIN`, private Werkzeug `ADMIN_PASSWORD_HASH`, independent session key of at least 32 characters and explicit broker hostname. See [.env.example](.env.example).
+4. Prepare the broker-owned password file and private data directory; mount the **whole config directory**, read-only logs and the broker PID namespace. [compose.production.yaml](compose.production.yaml) is a manager-only example; [compose.example.yaml](compose.example.yaml) includes a disposable broker example.
+5. Provide HTTPS on a trusted private network, sign in, and prove a disposable account change before using it with real devices.
 
-**Available for your manual test on 11 November 2026:** https://mqtt-users.strant.casa (LAN/WireGuard). The separate manager stack is running on METROPLEX; DNS, validated HTTPS, HTTP-to-HTTPS redirect, the login shell, exact product JavaScript/CSS, security headers and anonymous account-access refusal passed. Mosquitto identity/start time/restart count and all existing credential bytes are unchanged; neither the broker nor Caddy was restarted. Authenticated production operations, fresh credential proof, client-continuity observation and your screen test remain pending. Sign-in credentials are in the shared Vaultwarden item `MQTT User Manager - admin`. See the deployment runbook for the certificate-tool disclosure and pending rotation decision.
+Store credentials in a secret manager or protected deployment configuration, never in this repository. Keep HTTP bound to loopback unless another private ingress arrangement has been explicitly secured. The broker must require password authentication on the configured listener. The manager's local Docker-network verification is unencrypted and must not cross an untrusted network.
 
-The single post-build review fixed delayed password-generation responses and the scratch proxy network connection. Prior verification: 125 Python tests and six synthetic asynchronous UI tests passed, with actual disposable HTTP add/change/delete. No browser layout/click or screenshot pass is claimed; you explicitly approved deployment for your manual test. See [verification receipt](docs/verification.md) and [deployment](docs/deployment.md).
+## API
+
+See [the API contract](docs/api.md) for cookie sign-in, CSRF, sorting/filtering and add/change/remove operations. Writes return an operation ID: poll until completion rather than treating an HTTP 202 as success. There are no dedicated API keys or per-tool permissions; integrations currently have administrator access through an expiring session.
+
+## Connection evidence
+
+The manager observes a bounded current log, not all rotated history. A fresh observed connection resolves the row warning; an old last-seen timestamp retained after a log gap does not. Missing history can also leave unseen parallel sessions, so disconnect evidence remains qualified when the history is incomplete. Internal credential checks never count as device activity. API clients can distinguish incomplete history from row-level uncertainty.
 
 ## Test
 
 ```sh
-devenv
-# Activate the environment it prints.
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements-dev.txt
 python -m pytest -q --cov=app --cov-report=term-missing
 ruff check app tests wsgi.py
 node --check app/static/accounts.js
 node --test tests/ui_regressions.cjs
-docker build -t mqtt-user-manager:local .
 ```
 
-`test_*.py` fixtures are synthetic and offline. Explicit `tests/prove_broker.py` and `tests/scratch_rig.py up|down` create disposable Docker resources only; the latter requires the scratch admin password privately on stdin. `tests/container_api_proof.py` runs inside that disposable manager, not against production. Never copy production account hashes into tests.
+Tests named `test_*.py` use synthetic offline fixtures. Explicit Docker integration scripts create disposable resources only; they must never receive production password files. See [verification](docs/verification.md) for the distinction between unit, container and browser proof.
 
-## Run
+## Safety and maintenance
 
-Read [transaction ADR](docs/adr/0001-safe-password-file-transactions.md), [auth/presence ADR](docs/adr/0002-bounded-api-auth-and-presence.md), [production integration ADR](docs/adr/0003-private-client-and-screen.md) and [recovery](docs/recovery.md).
+Run one waitress application process, not multiple replicas or workers. All password-file writers must cooperate with `.mqtt-manager.lock`; stop the manager before direct maintenance. Interrupted or failed recovery transactions block further changes until explicit recovery. Same-filesystem backups are recovery snapshots, not disaster recovery.
 
-- Configure an exact HTTPS `PUBLIC_ORIGIN`, private Werkzeug `ADMIN_PASSWORD_HASH`, independent >=32-character `SECRET_KEY` and explicit `MQTT_BROKER_HOST`. Store credentials in shared Vaultwarden and stack secret settings; examples contain no values.
-- Password file must exist, be valid/regular/single-link, owned by broker UID/GID1883 and mode600/640. Prepare private manager data directory. The whole config directory mount is required for atomic replacement; logs are read-only.
-- Share only the broker PID namespace. Reload checks PID1 `comm`, exact executable argv and all UIDs before same-UID SIGHUP. This works with a root-started broker that drops privileges, where `/proc/1/exe` is not readable. Never mount Docker socket or host PID namespace.
-- Run exactly one waitress process (`python wsgi.py`), four HTTP threads, one transaction worker, bounded public results and a lifetime process lock. No queues or multi-process workers.
-- The default `FreshConnectVerifier` uses Mosquitto `-o` with private0600 ephemeral options, reserved client IDs, explicit bounded attempts and positive authenticated-CONNECT evidence. It refuses a listener accepting an incorrect password. This does not replace deployment verification of listener authentication policy and endpoint identity.
-- Base `eclipse-mosquitto:latest` floats per infrastructure standard. Actual tool compatibility target tested is binary2.1.2; re-run artifact checks on upstream changes. SHA512-PBKDF2 is the tested/default hashing algorithm. Optional Argon2 generation was not successful in the earlier tool image and is not deployment-approved.
+The manager verifies broker identity and UID before sending SIGHUP, then proves new credentials using a fresh authenticated connection. Deletion confirms exact file removal plus reload signalling, not forced logout. A compromised manager would still have access to the mounted config directory and shared broker PID namespace; these are deliberate privileges.
 
-Private-input handling keeps secrets out of argv/logs/results/browser storage. Verification on broker port1883 remains within the local Docker network; it is not encrypted transport and must not be extended to untrusted remote networks. Python cannot promise secure erasure of transient process memory.
+The upstream image floats at `eclipse-mosquitto:latest`; tested client-tool compatibility is Mosquitto binary 2.1.2. Re-run private-input and container tests on upstream changes. SHA512-PBKDF2 is the tested default; optional Argon2 generation is not integration-approved. Python cannot promise secure erasure of transient secret memory.
 
-## Recovery and maintenance
+## Project
 
-Follow [recovery](docs/recovery.md). Backups are same-filesystem recovery snapshots, not off-host disaster recovery. All external writers must cooperate with `.mqtt-manager.lock`; stop the manager before direct maintenance. A pathname fingerprint cannot eliminate races with uncooperative writers. Mounting the whole broker config directory and sharing broker PIDs are deliberate privileges: the app constrains writes to the account path/stages/backups, but compromise of the app would still have broader directory access.
-
-[API contract](docs/api.md) describes all endpoints. The public home screen contains only a login shell; account APIs require authentication. No passwords in persistent browser storage or retained operation results.
+[GitHub](https://github.com/loryanstrant/MQTT-User-Manager) is the public project page. Contributions are reviewed in the maintainer's canonical repository; GitHub is a one-way publication target. See the [MIT license](LICENSE).
