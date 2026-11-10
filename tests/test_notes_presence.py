@@ -94,10 +94,33 @@ def test_multiple_sessions_shared_user(tmp_path):
         "has been disconnected by administrative action.",
     ],
 )
-def test_disconnect_variants(tmp_path, ending):
+@pytest.mark.parametrize("address", ["", " [10.0.0.1:1234]", " [2001:db8::1:1234]"])
+def test_disconnect_variants(tmp_path, ending, address):
     path = tmp_path / "broker.log"
-    path.write_text(connected(NOW) + f"{NOW + 1}: Client client {ending}\n")
-    assert tracker(path).rows(["device"])["device"]["status"] == "disconnected"
+    path.write_text(connected(NOW) + f"{NOW + 1}: Client client{address} {ending}\n")
+    row = tracker(path).rows(["device"])["device"]
+    assert row["status"] == "disconnected" and row["connections"] == 0
+    assert row["last_seen"] == datetime.fromtimestamp(NOW + 1, timezone.utc).isoformat()
+
+
+def test_local_iso_address_disconnect_preserves_other_session(tmp_path):
+    path = tmp_path / "broker.log"
+    path.write_text(
+        "2026-11-10T21:00:00: New client connected from 10.0.0.1:1234 as one "
+        "(p4, c1, k60, u'device').\n"
+        "2026-11-10T21:00:01: New client connected from 10.0.0.2:1235 as two "
+        "(p4, c1, k60, u'device').\n"
+        "2026-11-10T21:00:02: Client one [10.0.0.1:1234] disconnected.\n"
+    )
+    presence = PresenceTracker(path, clock=lambda: 2000000000)
+    row = presence.rows(["device"])["device"]
+    assert row["status"] == "connected" and row["connections"] == 1
+    with path.open("a") as stream:
+        stream.write("2026-11-10T21:00:03: Client two [10.0.0.2:1235] disconnected.\n")
+    row = presence.rows(["device"])["device"]
+    assert row["status"] == "disconnected" and row["connections"] == 0
+    assert row["last_seen"] == "2026-11-10T10:00:03+00:00"
+    assert "21:00:03 AEDT" in row["last_seen_local"]
 
 
 def test_rotation_unknown_then_new_evidence(tmp_path):

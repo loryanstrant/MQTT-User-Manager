@@ -18,6 +18,8 @@ The approved account screen is served at `/` with external local CSS/JavaScript.
 - Sort: `username`, `note`, `status`, `last_seen`; direction `asc`/`desc`. Username ascending is the deliberate default/tie-break.
 - Response: `{accounts,total,count,critical,message}`; account fields are `username`, `note`, `protected`, `status`, `status_label`, `connections`, `last_seen` (ISO UTC or null), `last_seen_local` (Melbourne/AEDT display or null), `log_incomplete`, `source:"log observation"`.
 - Shapes/words: `● Connected`, `○ Disconnected`, `○ Unknown`, `◐ Reconnecting`. Show the log-observation explanation; these are not live socket checks. `critical` means account writes are blocked pending recovery. Do not silently hide incomplete evidence.
+- Adding/changing an account proves the credential through a short internal connection, but does **not** configure or connect the device. Reserved `mqtt-manager-check-` connections are excluded from presence and last seen. A new account remains `○ Unknown` with null last seen until a non-verification client event is observed. The page refreshes this list every 15 seconds while signed in with no dialog/operation active.
+- Disconnect observation accepts both `Client <id> disconnected.` and `Client <id> [<address>:<port>] disconnected.` formats; no old connected state is retained just because the broker includes its peer address. Current connect/disconnect parsing requires client IDs without whitespace; clients using IDs with spaces are not reliably represented.
 
 ## Generated passwords and notes
 
