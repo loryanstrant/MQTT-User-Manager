@@ -17,6 +17,9 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Validate public tree and publication scripts
         run: |
           python3 -m venv .publication-venv

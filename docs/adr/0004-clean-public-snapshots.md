@@ -17,4 +17,5 @@ Use a repository CI secret for GitHub access, never a credential URL, app settin
 - Only reviewed main snapshots are published; feature branches and canonical tags are not mirrored. GitHub remains a publication target, not the code-review/merge location.
 - Public-source cleanup does not remove private historical details from the canonical repository. Those remain private by design.
 - Publication screenshots must be actual running-product captures with synthetic data, not design previews or real deployment accounts. Browser verification and release/deployment are separate gates.
+- Publication validation selects Python 3.12 explicitly to match the verified pinned development dependencies, rather than relying on the runner's default Python.
 - Disable the workflow or remove its repository secret to stop automatic publication. Use the least-privileged repository-scoped credential available; an existing broader credential should be replaced with a dedicated token when one is provisioned.
