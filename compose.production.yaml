@@ -26,7 +26,7 @@ services:
       MQTT_PASSWD_STDIN_VERIFIED: "true"
       LOCAL_TIMEZONE: Australia/Melbourne
     read_only: true
-    tmpfs: [/tmp:rw,noexec,nosuid,size=4m,mode=1777]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=4m,mode=1777"]
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     mem_limit: 256m
