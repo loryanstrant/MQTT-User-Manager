@@ -1,0 +1,90 @@
+name: Publish container to GHCR
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# No package permissions until the tested-image publish job.
+permissions:
+  contents: read
+
+concurrency:
+  group: ghcr-main
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # Pin executable actions to reviewed revisions; update deliberately.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Run offline Python and JavaScript gates
+        run: |
+          python -m venv .ci-venv
+          .ci-venv/bin/pip install -r requirements-dev.txt
+          .ci-venv/bin/python -m pytest -q --cov=app
+          .ci-venv/bin/pip install ruff==0.16.6
+          .ci-venv/bin/ruff check app tests wsgi.py
+          node --check app/static/accounts.js
+          node --test tests/ui_regressions.cjs
+
+  publish:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Select lowercase image repository
+        run: echo "IMAGE_REPOSITORY=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - name: Build locally for smoke testing
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: ${{ env.IMAGE_REPOSITORY }}:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.title=MQTT User Manager
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=MIT
+          provenance: false
+      - name: Exercise the built image without a live broker
+        env:
+          MQTT_SMOKE_IMAGE: ${{ env.IMAGE_REPOSITORY }}:sha-${{ github.sha }}
+        run: python tests/container_image_smoke.py
+      - name: Sign in to GitHub Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish the exact tested image
+        run: |
+          docker push "$IMAGE_REPOSITORY:sha-$GITHUB_SHA"
+          echo "● Revision image uploaded: $IMAGE_REPOSITORY:sha-$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          # Old manual reruns may publish a revision, but must not roll latest back.
+          current_main=$(git ls-remote --exit-code "https://github.com/$GITHUB_REPOSITORY.git" refs/heads/main | cut -f1)
+          if [ "$current_main" != "$GITHUB_SHA" ]; then
+            echo "○ Latest unchanged: this run is no longer the main tip." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          docker tag "$IMAGE_REPOSITORY:sha-$GITHUB_SHA" "$IMAGE_REPOSITORY:latest"
+          if ! docker push "$IMAGE_REPOSITORY:latest"; then
+            echo "○ Latest upload failed; the revision image was already uploaded. Check registry state before rerunning." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "● Latest uploaded: $IMAGE_REPOSITORY:latest" >> "$GITHUB_STEP_SUMMARY"
