@@ -1,0 +1,30 @@
+name: Publish clean public snapshot
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: mqtt-public-snapshot
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: gitea.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Validate public tree and publication scripts
+        run: |
+          python3 -m venv .publication-venv
+          .publication-venv/bin/pip install -r requirements-dev.txt
+          .publication-venv/bin/python -m pytest -q tests/test_public_snapshot.py
+          bash -n scripts/publish_snapshot.sh
+      - name: Append a clean public snapshot
+        env:
+          PUBLIC_GITHUB_TOKEN: ${{ secrets.PUBLIC_GITHUB_TOKEN }}
+          PUBLICATION_SCRATCH: .publication-scratch
+        run: bash scripts/publish_snapshot.sh

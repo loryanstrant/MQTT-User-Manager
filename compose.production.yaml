@@ -1,30 +1,30 @@
-# Separate manager stack: never deploy or recreate the shared broker from this file.
+# Manager-only example: never deploy or recreate the shared broker from this file.
 services:
   mqtt-users:
-    image: ${MQTT_MANAGER_IMAGE:?Provide the verified commit-addressed manager image}
+    image: ${MQTT_MANAGER_IMAGE:?Provide the verified manager image}
     container_name: MQTT-Users
     restart: unless-stopped
     user: "1883:1883"
-    pid: "container:Mosquitto" # Rejoin deliberately if the broker is replaced later.
-    ports: ["127.0.0.1:8090:8080"] # METROPLEX host-network Caddy is the only ingress.
+    pid: "container:${MQTT_BROKER_CONTAINER:?Provide the existing broker container name}"
+    ports: ["127.0.0.1:8090:8080"] # The local HTTPS reverse proxy is the only ingress.
     volumes:
-      - /home/docker/Mosquitto/config:/mosquitto/config
-      - /home/docker/Mosquitto/log:/mosquitto/log:ro
-      - /etc/docker/MQTT-Users/data:/data
+      - ${MQTT_CONFIG_DIR:?Provide the existing broker config directory}:/mosquitto/config
+      - ${MQTT_LOG_DIR:?Provide the existing broker log directory}:/mosquitto/log:ro
+      - ${MQTT_MANAGER_DATA_DIR:?Provide the private manager data directory}:/data
     environment:
-      PUBLIC_ORIGIN: https://mqtt-users.strant.casa
-      ADMIN_USERNAME: admin
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Provide the exact HTTPS origin}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
       SECRET_KEY: ${SECRET_KEY:-}
-      MQTT_BROKER_HOST: mosquitto
-      MQTT_BROKER_PORT: "1883"
-      MQTT_PASSWORD_FILE: /mosquitto/config/passwords
+      MQTT_BROKER_HOST: ${MQTT_BROKER_HOST:-mosquitto}
+      MQTT_BROKER_PORT: "${MQTT_BROKER_PORT:-1883}"
+      MQTT_PASSWORD_FILE: /mosquitto/config/${MQTT_PASSWORD_FILENAME:-passwords}
       MQTT_NOTES_FILE: /data/notes.json
       MQTT_LOG_FILE: /mosquitto/log/mosquitto.log
       MQTT_HASH_ALGO: sha512-pbkdf2
-      MQTT_PROTECTED_ACCOUNTS: homeassistant,zigbee2mqtt
+      MQTT_PROTECTED_ACCOUNTS: ${MQTT_PROTECTED_ACCOUNTS:-homeassistant,zigbee2mqtt}
       MQTT_PASSWD_STDIN_VERIFIED: "true"
-      LOCAL_TIMEZONE: Australia/Melbourne
+      LOCAL_TIMEZONE: ${LOCAL_TIMEZONE:-UTC}
     read_only: true
     tmpfs: ["/tmp:rw,noexec,nosuid,size=4m,mode=1777"]
     security_opt: [no-new-privileges:true]
@@ -35,4 +35,4 @@ services:
 networks:
   broker:
     external: true
-    name: mosquitto_default
+    name: ${MQTT_BROKER_NETWORK:?Provide the existing broker network name}

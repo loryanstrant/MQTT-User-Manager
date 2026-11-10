@@ -12,3 +12,6 @@ _CONSULTANT/
 
 .mcp.json
 .scratch/
+
+.publication-venv/
+.publication-scratch/

@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 IMAGE = "eclipse-mosquitto:latest"
-PREFIX = "rufus-scratch-mqtt-c204b6db"
+PREFIX = "rufus-scratch-mqtt-proof"
 DATA, BROKER = PREFIX + "-data", PREFIX + "-broker"
 results = {}
 
