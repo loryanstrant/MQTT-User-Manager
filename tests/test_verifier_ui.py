@@ -91,3 +91,19 @@ def test_identity_wrong_command_refused(tmp_path):
             broker_uid=os.geteuid(), proc=tmp_path, signaler=lambda *x: signals.append(x)
         )()
     assert signals == []
+
+
+def test_branding_assets_and_safe_repo_link(client):
+    response = client.get("/", base_url="https://manager.test")
+    assert b"favicon.ico" in response.data and b"favicon-32.png" in response.data
+    assert b"https://github.com/loryanstrant/MQTT-User-Manager" in response.data
+    assert b'rel="noopener noreferrer"' in response.data
+    assert b"GitHub<span" in response.data
+    for filename, magic in [
+        ("icon.png", b"\x89PNG"),
+        ("favicon-32.png", b"\x89PNG"),
+        ("github-mark.png", b"\x89PNG"),
+        ("favicon.ico", b"\x00\x00\x01\x00"),
+    ]:
+        asset = client.get("/static/" + filename, base_url="https://manager.test")
+        assert asset.status_code == 200 and asset.data.startswith(magic)

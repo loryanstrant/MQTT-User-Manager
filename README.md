@@ -1,5 +1,7 @@
 # MQTT User Manager
 
+![MQTT User Manager icon](app/static/icon.png)
+
 **Create MQTT accounts and change their passwords from a private web page.** Keep Mosquitto's existing password-file authentication instead of migrating accounts or replacing the broker.
 
 ## Features

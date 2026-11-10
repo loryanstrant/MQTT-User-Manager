@@ -2,6 +2,9 @@
 
 ## Unreleased — 2026-11-11
 
+- Add the account-to-devices icon, multi-size favicon and labelled official GitHub-mark header link.
+- Publish allowlisted clean snapshots to GitHub after canonical main changes; private commit history is never mirrored. Publication requires a dedicated runtime secret and rejects private markers.
+
 - Add per-account evidence uncertainty separately from incomplete log history. Fresh tracked connections clear the row warning; lost-history timestamps and untracked possible sessions remain qualified.
 - Replace private deployment references with generic setup and verification documentation, parameterize the disposable preview harness, and preserve the project’s existing MIT license.
 
