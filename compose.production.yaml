@@ -1,0 +1,38 @@
+# Manager-only example: never deploy or recreate the shared broker from this file.
+services:
+  mqtt-users:
+    image: ${MQTT_MANAGER_IMAGE:?Provide the verified manager image}
+    container_name: MQTT-Users
+    restart: unless-stopped
+    user: "1883:1883"
+    pid: "container:${MQTT_BROKER_CONTAINER:?Provide the existing broker container name}"
+    ports: ["127.0.0.1:8090:8080"] # The local HTTPS reverse proxy is the only ingress.
+    volumes:
+      - ${MQTT_CONFIG_DIR:?Provide the existing broker config directory}:/mosquitto/config
+      - ${MQTT_LOG_DIR:?Provide the existing broker log directory}:/mosquitto/log:ro
+      - ${MQTT_MANAGER_DATA_DIR:?Provide the private manager data directory}:/data
+    environment:
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Provide the exact HTTPS origin}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
+      SECRET_KEY: ${SECRET_KEY:-}
+      MQTT_BROKER_HOST: ${MQTT_BROKER_HOST:-mosquitto}
+      MQTT_BROKER_PORT: "${MQTT_BROKER_PORT:-1883}"
+      MQTT_PASSWORD_FILE: /mosquitto/config/${MQTT_PASSWORD_FILENAME:-passwords}
+      MQTT_NOTES_FILE: /data/notes.json
+      MQTT_LOG_FILE: /mosquitto/log/mosquitto.log
+      MQTT_HASH_ALGO: sha512-pbkdf2
+      MQTT_PROTECTED_ACCOUNTS: ${MQTT_PROTECTED_ACCOUNTS:-homeassistant,zigbee2mqtt}
+      MQTT_PASSWD_STDIN_VERIFIED: "true"
+      LOCAL_TIMEZONE: ${LOCAL_TIMEZONE:-UTC}
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=4m,mode=1777"]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 256m
+    pids_limit: 64
+    networks: [broker]
+networks:
+  broker:
+    external: true
+    name: ${MQTT_BROKER_NETWORK:?Provide the existing broker network name}

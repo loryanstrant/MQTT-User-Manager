@@ -1,0 +1,11 @@
+.git
+.mcp.json
+.scratch
+_IMAGES
+_CONSULTANT
+.pytest_cache
+.ruff_cache
+.coverage
+**/__pycache__
+.env
+.env.*

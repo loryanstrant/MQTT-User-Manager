@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.pyc
+_IMAGES/
+_CONSULTANT/
+
+.mcp.json
+.scratch/
+
+.publication-venv/
+.publication-scratch/

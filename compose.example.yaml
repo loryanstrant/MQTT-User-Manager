@@ -1,0 +1,49 @@
+# Example only. Deployer must prove container/client mechanics and supply a broker config.
+# No production credentials, fleet paths, Docker socket, or deployment actions here.
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest # Floating upstream; reverify client compatibility on image updates.
+    container_name: Mosquitto-Example
+    user: "1883:1883"
+    restart: unless-stopped
+    command: ["mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
+    volumes:
+      - /etc/docker/mqtt-user-manager-example/config:/mosquitto/config
+      - /etc/docker/mqtt-user-manager-example/log:/mosquitto/log
+    networks: [mqtt]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
+  manager:
+    build: .
+    container_name: MQTT-User-Manager
+    restart: unless-stopped
+    user: "1883:1883"
+    pid: "service:mosquitto" # Deployer must prove broker is PID1; this shares PIDs, NOT network.
+    depends_on: [mosquitto]
+    ports: ["127.0.0.1:8080:8080"] # Put HTTPS/LAN ingress in the approved routing surface.
+    volumes:
+      - /etc/docker/mqtt-user-manager-example/config:/mosquitto/config # Whole directory for atomic rename.
+      - /etc/docker/mqtt-user-manager-example/log:/mosquitto/log:ro
+      - /etc/docker/mqtt-user-manager-example/data:/data
+    environment:
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-https://mqtt-users.example.invalid}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
+      SECRET_KEY: ${SECRET_KEY:-}
+      MQTT_BROKER_HOST: mosquitto # pid sharing does not share network/localhost.
+      MQTT_BROKER_PORT: "1883"
+      MQTT_PASSWORD_FILE: /mosquitto/config/passwd
+      MQTT_NOTES_FILE: /data/notes.json
+      MQTT_LOG_FILE: /mosquitto/log/mosquitto.log
+      MQTT_HASH_ALGO: sha512-pbkdf2
+      MQTT_PROTECTED_ACCOUNTS: homeassistant,zigbee2mqtt
+      MQTT_PASSWD_STDIN_VERIFIED: "true"
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=4m,mode=1777"] # Private ephemeral client configs only; never screenshots.
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    networks: [mqtt]
+
+networks:
+  mqtt: {} # Deployer chooses a suitable private network for this deployment.
