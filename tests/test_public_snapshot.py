@@ -106,6 +106,16 @@ def test_destination_must_be_empty(tmp_path):
     assert (destination / "keep").read_text() == "keep"
 
 
+def test_publication_selects_verified_python_runtime():
+    from pathlib import Path
+
+    workflow = (Path(__file__).resolve().parents[1] / ".gitea/workflows/public-snapshot.yml").read_text()
+    setup = workflow.index("uses: actions/setup-python@v5")
+    validation = workflow.index("- name: Validate public tree")
+    assert setup < validation
+    assert "python-version: '3.12'" in workflow[setup:validation]
+
+
 def test_allowlist_rejects_private_roots_and_paths():
     for name in (
         ".git/config",

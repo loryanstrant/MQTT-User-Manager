@@ -2,6 +2,8 @@
 
 ## Unreleased — 2026-11-11
 
+- Select Python 3.12 explicitly for public publication validation so pinned test dependencies match the verified development runtime.
+
 - Add the account-to-devices icon, multi-size favicon and labelled official GitHub-mark header link.
 - Publish allowlisted clean snapshots to GitHub after canonical main changes; private commit history is never mirrored. Publication requires a dedicated runtime secret and rejects private markers.
 
