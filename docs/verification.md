@@ -25,7 +25,7 @@ These results are not a universal compatibility guarantee: rerun on the final up
 
 The tracker handles plain and address-bearing IPv4/IPv6 disconnects and multiple sessions per account. Internal `mqtt-manager-check-` clients do not count as device presence. Log rotation/truncation, missing files, skipped scan bytes and memory limits invalidate continuity; old timestamps may remain but do not prove present connectivity.
 
-`log_incomplete` reports whole-history coverage. `presence_uncertain` reports whether the row should carry an evidence warning. A fresh tracked connection can clear that warning without claiming all history was recovered or that the reported count includes unseen parallel sessions. After the last tracked disconnect with incomplete history, the warning returns. Client IDs containing whitespace are not reliably represented by the current parser.
+`log_incomplete` reports whole-history coverage. `presence_uncertain` reports row-level evidence uncertainty for API consumers. A fresh tracked connection can clear that uncertainty without claiming all history was recovered or that the reported count includes unseen parallel sessions. After the last tracked disconnect with incomplete history, uncertainty returns. The web page shows status and last seen without a repeated row warning; synthetic JavaScript regression coverage checks both retained timestamps and unseen accounts with incomplete evidence. Client IDs containing whitespace are not reliably represented by the current parser.
 
 ## Browser and production boundaries
 

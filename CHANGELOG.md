@@ -2,6 +2,8 @@
 
 ## Unreleased — 2026-11-11
 
+- Remove the repeated “Incomplete log evidence” line from account rows at the maintainer’s request; keep observed connection status, last-seen values and API evidence flags unchanged. The single review also removes stale explanatory copy that promised an incomplete-log warning, with a page-shell regression retaining the shared observation guidance.
+
 - Cover disposable-container cleanup after timeouts, refuse stale-main promotion to latest, and report partial registry publication explicitly with offline regression tests.
 
 - Add a public GitHub Actions workflow that runs offline gates, builds a Linux AMD64 container, exercises startup/auth/assets with generated private test credentials in a network-isolated disposable container, then uploads that exact image to GHCR with source-revision and latest tags.

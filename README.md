@@ -30,7 +30,7 @@ See [the API contract](docs/api.md) for cookie sign-in, CSRF, sorting/filtering 
 
 ## Connection evidence
 
-The manager observes a bounded current log, not all rotated history. A fresh observed connection resolves the row warning; an old last-seen timestamp retained after a log gap does not. Missing history can also leave unseen parallel sessions, so disconnect evidence remains qualified when the history is incomplete. Internal credential checks never count as device activity. API clients can distinguish incomplete history from row-level uncertainty.
+The manager observes a bounded current log, not all rotated history. The table shows the observed connection status and last-seen time without a repeated incomplete-log warning on each row. Missing history can leave connections unknown even when an earlier last-seen timestamp is retained. Internal credential checks never count as device activity. API clients can still distinguish incomplete history from row-level uncertainty.
 
 ## Test
 
