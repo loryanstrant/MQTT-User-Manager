@@ -77,6 +77,15 @@ def test_public_shell_no_account_data(client):
     assert client.get("/api/accounts", base_url="https://manager.test").status_code == 401
 
 
+def test_public_shell_keeps_observation_guidance_without_log_warning(client):
+    response = client.get("/", base_url="https://manager.test")
+    assert response.status_code == 200
+    assert b"Connection status is estimated from broker logs, not a live session list." in response.data
+    assert b"Last seen means the last logged connection event, not the last message." in response.data
+    assert b"Incomplete logs are shown" not in response.data
+    assert b"Incomplete log evidence" not in response.data
+
+
 def test_identity_wrong_command_refused(tmp_path):
     from app.passwd import BrokerReloader
 

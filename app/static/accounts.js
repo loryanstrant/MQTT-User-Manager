@@ -44,8 +44,7 @@ async function loadAccounts() {
       if (account.protected) { const tag = document.createElement('span'); tag.className = 'protected'; tag.textContent = 'Protected from removal'; name.append(tag); }
       const note = cell(row, '', 'note'); note.append(button(account.note || 'Add a note', () => openEdit('note', account), 'subtle'));
       cell(row, account.status_label === '○ Disconnected' ? '○ Not connected' : account.status_label, 'state');
-      const seen = cell(row, account.last_seen_local || 'Not seen in available logs', 'seen');
-      if (account.presence_uncertain ?? account.log_incomplete) { const tag = document.createElement('span'); tag.className = 'protected'; tag.textContent = 'Incomplete log evidence'; seen.append(tag); }
+      cell(row, account.last_seen_local || 'Not seen in available logs', 'seen');
       const actions = document.createElement('div'); actions.className = 'actions';
       const change = button('Change password', () => openEdit('change', account)); change.disabled = busy || result.critical;
       const remove = button(account.protected ? 'Protected' : 'Remove', () => openRemove(account), 'danger'); remove.disabled = busy || account.protected || result.critical;

@@ -11,24 +11,55 @@ function deferred() {
   const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
   return {promise, resolve, reject};
 }
-async function rig() {
+async function rig({renderAccounts = false} = {}) {
   const nodes = new Map();
+  function element() {
+    return {value: '', textContent: '', hidden: false, disabled: false, open: false, listeners: {}, children: [],
+      addEventListener(name, fn) { this.listeners[name] = fn; },
+      append(...children) { this.children.push(...children); },
+      replaceChildren(...children) { this.children = children; }, focus() {},
+      close() { this.open = false; }, showModal() { this.open = true; }};
+  }
   function node(id) {
-    if (!nodes.has(id)) nodes.set(id, {value: '', textContent: '', hidden: false, disabled: false, open: false, listeners: {},
-      addEventListener(name, fn) { this.listeners[name] = fn; }, replaceChildren() {}, focus() {},
-      close() { this.open = false; }, showModal() { this.open = true; }});
+    if (!nodes.has(id)) nodes.set(id, element());
     return nodes.get(id);
   }
   const window = {listeners: {}, addEventListener(name, fn) { this.listeners[name] = fn; }};
-  const context = vm.createContext({document: {getElementById: node, querySelectorAll: () => []}, window,
+  const context = vm.createContext({document: {getElementById: node, createElement: element, querySelectorAll: () => []}, window,
     setInterval() {}, setTimeout, clearTimeout, URLSearchParams, AbortSignal,
     fetch: async () => ({ok: false, status: 401, json: async () => ({message: 'Synthetic signed out'})})});
   vm.runInContext(source, context);
   await new Promise(resolve => setImmediate(resolve));
-  vm.runInContext("loadAccounts = async () => {}; editAction = 'add';", context);
+  if (!renderAccounts) vm.runInContext('loadAccounts = async () => {};', context);
+  vm.runInContext("editAction = 'add';", context);
   node('edit-dialog').open = true;
   return {node, window, context, run: code => vm.runInContext(code, context)};
 }
+test('incomplete evidence rows keep status and last seen without the repeated warning', async () => {
+  const r = await rig({renderAccounts: true});
+  r.context.result = {total: 3, count: 3, critical: false, accounts: [
+    {username: 'device-one', note: '', protected: true, status_label: '○ Unknown', last_seen_local: '11 Nov 2026 10:00 AEDT', presence_uncertain: true, log_incomplete: true},
+    {username: 'device-two', note: '', protected: false, status_label: '○ Unknown', last_seen_local: null, presence_uncertain: true, log_incomplete: true},
+    {username: 'legacy-device', note: '', protected: false, status_label: '○ Disconnected', last_seen_local: '11 Nov 2026 09:00 AEDT', log_incomplete: true}
+  ]};
+  r.run('api = async () => result;');
+  await r.run('loadAccounts()');
+  const rows = r.node('rows').children;
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0].children[2].textContent, '○ Unknown');
+  assert.equal(rows[0].children[3].textContent, '11 Nov 2026 10:00 AEDT');
+  assert.equal(rows[1].children[3].textContent, 'Not seen in available logs');
+  assert.equal(rows[2].children[2].textContent, '○ Not connected');
+  assert.equal(rows[2].children[3].textContent, '11 Nov 2026 09:00 AEDT');
+  for (const row of rows) {
+    assert.equal(row.children[3].children.length, 0);
+    assert.equal(row.children[4].children[0].children[0].textContent, 'Change password');
+  }
+  assert.equal(rows[0].children[0].children[0].textContent, 'Protected from removal');
+  assert.equal(rows[0].children[4].children[0].children[1].disabled, true);
+  assert.equal(r.run('result.accounts[0].presence_uncertain'), true);
+  assert.equal(r.run('result.accounts[0].log_incomplete'), true);
+});
 function generation(r, pending) {
   r.context.pending = pending;
   r.run('api = async () => pending.promise;');
