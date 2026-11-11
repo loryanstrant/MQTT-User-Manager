@@ -1,5 +1,19 @@
 # MQTT-User-Manager engineering rules
 
+<!-- navgen:start-here:begin -->
+## Start here (generated)
+
+1. Read [NAVIGATION.md](NAVIGATION.md) - the repository map: docs, headings,
+   entry points, public symbols, operations.
+2. Use [`.agent/navigation.json`](.agent/navigation.json) when structured paths
+   are easier to consume than prose.
+3. Use the Gitea MCP server for live state: issues, pull requests, CI results.
+
+Do not hand-edit `NAVIGATION.md` or `.agent/navigation.json`; they are generated
+by navgen (`tools/navgen/navgen repo` in dev-standards) and refreshed nightly.
+<!-- navgen:start-here:end -->
+
+
 Read README.md, docs/api.md, and all ADRs before editing. Read whole source files; do not infer behavior from fragments. Preserve the security, test and UI requirements below.
 
 - No Docker socket or Docker/host management APIs in the app. Same-UID broker PID namespace signalling only after identity verification. Broker network host is explicitly `mosquitto`, not localhost.
