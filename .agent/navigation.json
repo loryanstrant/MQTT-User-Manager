@@ -1,0 +1,885 @@
+{
+  "schema_version": "1.0",
+  "repository": "MQTT-User-Manager",
+  "identity": {
+    "description": "**Create MQTT accounts and change their passwords from a private web page.** Keep Mosquitto's existing password-file authentication instead of migrating accounts or replacing the broker.",
+    "default_branch": "main",
+    "languages": {
+      "Python": 24,
+      "JavaScript": 2,
+      "Shell": 1
+    },
+    "topics": [],
+    "licence": "MIT License",
+    "file_count": 57
+  },
+  "start_here": {
+    "readme": "README.md",
+    "agents_md": "AGENTS.md",
+    "entry_points": [
+      "wsgi.py"
+    ],
+    "decision_records": [
+      "docs/adr/0001-safe-password-file-transactions.md",
+      "docs/adr/0002-bounded-api-auth-and-presence.md",
+      "docs/adr/0003-private-client-and-screen.md",
+      "docs/adr/0004-clean-public-snapshots.md",
+      "docs/adr/0005-public-container-publishing.md"
+    ],
+    "build_config": [
+      "pyproject.toml",
+      "requirements-dev.txt",
+      "requirements.txt"
+    ],
+    "source_roots": [
+      "app",
+      "scripts",
+      "."
+    ]
+  },
+  "documentation": [
+    {
+      "path": "CHANGELOG.md",
+      "title": "Changelog",
+      "lines": 38,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Unreleased — 2026-11-11",
+          "anchor": "unreleased--2026-11-11"
+        },
+        {
+          "level": 2,
+          "text": "Initial implementation — 2026-11-10",
+          "anchor": "initial-implementation--2026-11-10"
+        }
+      ]
+    },
+    {
+      "path": "README.md",
+      "title": "MQTT User Manager",
+      "lines": 65,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Features",
+          "anchor": "features"
+        },
+        {
+          "level": 2,
+          "text": "Getting started",
+          "anchor": "getting-started"
+        },
+        {
+          "level": 2,
+          "text": "API",
+          "anchor": "api"
+        },
+        {
+          "level": 2,
+          "text": "Connection evidence",
+          "anchor": "connection-evidence"
+        },
+        {
+          "level": 2,
+          "text": "Test",
+          "anchor": "test"
+        },
+        {
+          "level": 2,
+          "text": "Safety and maintenance",
+          "anchor": "safety-and-maintenance"
+        },
+        {
+          "level": 2,
+          "text": "Container publishing",
+          "anchor": "container-publishing"
+        },
+        {
+          "level": 2,
+          "text": "Project",
+          "anchor": "project"
+        }
+      ]
+    },
+    {
+      "path": "docs/adr/0001-safe-password-file-transactions.md",
+      "title": "ADR-0001: Preserve the password file; prove changes before reporting success",
+      "lines": 28,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Decision",
+          "anchor": "decision"
+        },
+        {
+          "level": 2,
+          "text": "Consequences and boundaries",
+          "anchor": "consequences-and-boundaries"
+        }
+      ]
+    },
+    {
+      "path": "docs/adr/0002-bounded-api-auth-and-presence.md",
+      "title": "ADR-0002: Bounded progress, private admin access, and honest observations",
+      "lines": 23,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Decision",
+          "anchor": "decision"
+        },
+        {
+          "level": 2,
+          "text": "Limits",
+          "anchor": "limits"
+        }
+      ]
+    },
+    {
+      "path": "docs/adr/0003-private-client-and-screen.md",
+      "title": "ADR-0003: Private client proof and approved account screen",
+      "lines": 18,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Decision",
+          "anchor": "decision"
+        },
+        {
+          "level": 2,
+          "text": "Limits and evidence",
+          "anchor": "limits-and-evidence"
+        }
+      ]
+    },
+    {
+      "path": "docs/adr/0004-clean-public-snapshots.md",
+      "title": "ADR-0004: Publish clean snapshots without private history",
+      "lines": 22,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Decision",
+          "anchor": "decision"
+        },
+        {
+          "level": 2,
+          "text": "Consequences",
+          "anchor": "consequences"
+        }
+      ]
+    },
+    {
+      "path": "docs/adr/0005-public-container-publishing.md",
+      "title": "ADR-0005: Publish the tested public image through GitHub",
+      "lines": 20,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Decision",
+          "anchor": "decision"
+        },
+        {
+          "level": 2,
+          "text": "Boundaries",
+          "anchor": "boundaries"
+        }
+      ]
+    },
+    {
+      "path": "docs/api.md",
+      "title": "Backend API contract",
+      "lines": 45,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Sign-in sequence",
+          "anchor": "sign-in-sequence"
+        },
+        {
+          "level": 2,
+          "text": "Account table",
+          "anchor": "account-table"
+        },
+        {
+          "level": 2,
+          "text": "Generated passwords and notes",
+          "anchor": "generated-passwords-and-notes"
+        },
+        {
+          "level": 2,
+          "text": "Account operations and progress",
+          "anchor": "account-operations-and-progress"
+        },
+        {
+          "level": 2,
+          "text": "Error and operational contracts",
+          "anchor": "error-and-operational-contracts"
+        }
+      ]
+    },
+    {
+      "path": "docs/assets.md",
+      "title": "Product artwork",
+      "lines": 7,
+      "headings": []
+    },
+    {
+      "path": "docs/deployment.md",
+      "title": "Deployment guide",
+      "lines": 51,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Manager-only deployment",
+          "anchor": "manager-only-deployment"
+        },
+        {
+          "level": 2,
+          "text": "Broker prerequisites",
+          "anchor": "broker-prerequisites"
+        },
+        {
+          "level": 2,
+          "text": "Release gate",
+          "anchor": "release-gate"
+        },
+        {
+          "level": 2,
+          "text": "Container registry",
+          "anchor": "container-registry"
+        },
+        {
+          "level": 2,
+          "text": "Maintenance",
+          "anchor": "maintenance"
+        }
+      ]
+    },
+    {
+      "path": "docs/recovery.md",
+      "title": "Recovery: account edits are blocked",
+      "lines": 29,
+      "headings": [
+        {
+          "level": 2,
+          "text": "What the warning means",
+          "anchor": "what-the-warning-means"
+        },
+        {
+          "level": 2,
+          "text": "Ordinary failures",
+          "anchor": "ordinary-failures"
+        },
+        {
+          "level": 2,
+          "text": "Backups and operational constraints",
+          "anchor": "backups-and-operational-constraints"
+        }
+      ]
+    },
+    {
+      "path": "docs/verification.md",
+      "title": "Verification boundaries",
+      "lines": 34,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Offline gate",
+          "anchor": "offline-gate"
+        },
+        {
+          "level": 2,
+          "text": "Disposable integration evidence",
+          "anchor": "disposable-integration-evidence"
+        },
+        {
+          "level": 2,
+          "text": "Presence evidence",
+          "anchor": "presence-evidence"
+        },
+        {
+          "level": 2,
+          "text": "Browser and production boundaries",
+          "anchor": "browser-and-production-boundaries"
+        }
+      ]
+    }
+  ],
+  "code": {
+    "source_roots": [
+      "app",
+      "scripts",
+      "."
+    ],
+    "symbol_source": "repomix (tree-sitter signatures)",
+    "routes": [],
+    "files": [
+      {
+        "path": "app/__init__.py",
+        "symbols": [
+          {
+            "kind": "const",
+            "name": "DEFAULTS",
+            "parent": "",
+            "signature": "DEFAULTS ="
+          },
+          {
+            "kind": "function",
+            "name": "unverified_client",
+            "parent": "",
+            "signature": "unverified_client(username, password)"
+          },
+          {
+            "kind": "function",
+            "name": "create_app",
+            "parent": "",
+            "signature": "create_app(config=None, services=None)"
+          },
+          {
+            "kind": "function",
+            "name": "payload",
+            "parent": "",
+            "signature": "payload()"
+          },
+          {
+            "kind": "route",
+            "name": "home",
+            "parent": "",
+            "signature": "@app.get(\"/\") -> home()"
+          },
+          {
+            "kind": "route",
+            "name": "health",
+            "parent": "",
+            "signature": "@app.get(\"/healthz\") -> health()"
+          },
+          {
+            "kind": "route",
+            "name": "accounts",
+            "parent": "",
+            "signature": "@app.get(\"/api/accounts\") -> accounts()"
+          },
+          {
+            "kind": "route",
+            "name": "password",
+            "parent": "",
+            "signature": "@app.post(\"/api/passwords/generate\") -> password()"
+          },
+          {
+            "kind": "route",
+            "name": "note",
+            "parent": "",
+            "signature": "@app.put(\"/api/accounts/<username>/note\") -> note(username)"
+          },
+          {
+            "kind": "route",
+            "name": "operation",
+            "parent": "",
+            "signature": "@app.post(\"/api/operations\") -> operation()"
+          },
+          {
+            "kind": "function",
+            "name": "job",
+            "parent": "",
+            "signature": "job(progress)"
+          },
+          {
+            "kind": "route",
+            "name": "operation_status",
+            "parent": "",
+            "signature": "@app.get(\"/api/operations/<task_id>\") -> operation_status(task_id)"
+          },
+          {
+            "kind": "function",
+            "name": "account_error",
+            "parent": "",
+            "signature": "account_error(error)"
+          },
+          {
+            "kind": "function",
+            "name": "safe_error",
+            "parent": "",
+            "signature": "safe_error(error)"
+          }
+        ]
+      },
+      {
+        "path": "app/auth.py",
+        "symbols": [
+          {
+            "kind": "class",
+            "name": "RateLimiter",
+            "parent": "",
+            "signature": "class RateLimiter"
+          },
+          {
+            "kind": "function",
+            "name": "allow",
+            "parent": "RateLimiter",
+            "signature": "allow(self, key, limit, window)"
+          },
+          {
+            "kind": "function",
+            "name": "canonical_origin",
+            "parent": "",
+            "signature": "canonical_origin(value)"
+          },
+          {
+            "kind": "function",
+            "name": "csrf_token",
+            "parent": "",
+            "signature": "csrf_token()"
+          },
+          {
+            "kind": "function",
+            "name": "install_auth",
+            "parent": "",
+            "signature": "install_auth(app)"
+          },
+          {
+            "kind": "function",
+            "name": "guard",
+            "parent": "RateLimiter",
+            "signature": "guard()"
+          },
+          {
+            "kind": "route",
+            "name": "csrf",
+            "parent": "",
+            "signature": "@blueprint.get(\"/csrf\") -> csrf()"
+          },
+          {
+            "kind": "route",
+            "name": "login",
+            "parent": "",
+            "signature": "@blueprint.post(\"/login\") -> login()"
+          },
+          {
+            "kind": "route",
+            "name": "current",
+            "parent": "",
+            "signature": "@blueprint.get(\"/session\") -> current()"
+          },
+          {
+            "kind": "route",
+            "name": "logout",
+            "parent": "",
+            "signature": "@blueprint.post(\"/logout\") -> logout()"
+          },
+          {
+            "kind": "function",
+            "name": "headers",
+            "parent": "RateLimiter",
+            "signature": "headers(response)"
+          }
+        ]
+      },
+      {
+        "path": "app/notes.py",
+        "symbols": [
+          {
+            "kind": "function",
+            "name": "validate_note",
+            "parent": "",
+            "signature": "validate_note(note)"
+          },
+          {
+            "kind": "class",
+            "name": "NotesStore",
+            "parent": "",
+            "signature": "class NotesStore"
+          },
+          {
+            "kind": "function",
+            "name": "read",
+            "parent": "NotesStore",
+            "signature": "read(self)"
+          },
+          {
+            "kind": "function",
+            "name": "unique",
+            "parent": "",
+            "signature": "unique(pairs)"
+          },
+          {
+            "kind": "function",
+            "name": "set",
+            "parent": "NotesStore",
+            "signature": "set(self, username, note)"
+          }
+        ]
+      },
+      {
+        "path": "app/passwd.py",
+        "symbols": [
+          {
+            "kind": "class",
+            "name": "AccountError",
+            "parent": "",
+            "signature": "class AccountError(Exception)"
+          },
+          {
+            "kind": "class",
+            "name": "CriticalError",
+            "parent": "",
+            "signature": "class CriticalError(AccountError)"
+          },
+          {
+            "kind": "function",
+            "name": "validate_username",
+            "parent": "",
+            "signature": "validate_username(username: str) -> str"
+          },
+          {
+            "kind": "function",
+            "name": "validate_password",
+            "parent": "",
+            "signature": "validate_password(password: str) -> str"
+          },
+          {
+            "kind": "function",
+            "name": "generate_password",
+            "parent": "",
+            "signature": "generate_password() -> str"
+          },
+          {
+            "kind": "function",
+            "name": "parse_password_file",
+            "parent": "",
+            "signature": "parse_password_file(data: bytes) -> dict[str, bytes]"
+          },
+          {
+            "kind": "class",
+            "name": "Snapshot",
+            "parent": "",
+            "signature": "class Snapshot"
+          },
+          {
+            "kind": "function",
+            "name": "fingerprint",
+            "parent": "Snapshot",
+            "signature": "fingerprint(self) -> tuple"
+          },
+          {
+            "kind": "function",
+            "name": "snapshot",
+            "parent": "",
+            "signature": "snapshot(path: Path, max_bytes: int = 2 * 1024 * 1024) -> Snapshot"
+          },
+          {
+            "kind": "function",
+            "name": "fsync_directory",
+            "parent": "",
+            "signature": "fsync_directory(path: Path) -> None"
+          },
+          {
+            "kind": "function",
+            "name": "file_lock",
+            "parent": "",
+            "signature": "file_lock(path: Path, timeout: float = 3.0)"
+          },
+          {
+            "kind": "function",
+            "name": "private_directory",
+            "parent": "",
+            "signature": "private_directory(path: Path) -> None"
+          },
+          {
+            "kind": "class",
+            "name": "PasswordCommand",
+            "parent": "",
+            "signature": "class PasswordCommand"
+          },
+          {
+            "kind": "class",
+            "name": "BrokerReloader",
+            "parent": "",
+            "signature": "class BrokerReloader"
+          },
+          {
+            "kind": "class",
+            "name": "PasswordStore",
+            "parent": "",
+            "signature": "class PasswordStore"
+          },
+          {
+            "kind": "function",
+            "name": "accounts",
+            "parent": "PasswordStore",
+            "signature": "accounts(self) -> list[str]"
+          },
+          {
+            "kind": "function",
+            "name": "blocked",
+            "parent": "PasswordStore",
+            "signature": "blocked(self) -> bool"
+          }
+        ]
+      },
+      {
+        "path": "app/presence.py",
+        "symbols": [
+          {
+            "kind": "const",
+            "name": "CONNECT",
+            "parent": "",
+            "signature": "CONNECT = re.compile("
+          },
+          {
+            "kind": "const",
+            "name": "DISCONNECT",
+            "parent": "",
+            "signature": "DISCONNECT = re.compile("
+          },
+          {
+            "kind": "const",
+            "name": "STAMP",
+            "parent": "",
+            "signature": "STAMP = re.compile("
+          },
+          {
+            "kind": "class",
+            "name": "PresenceTracker",
+            "parent": "",
+            "signature": "class PresenceTracker"
+          },
+          {
+            "kind": "function",
+            "name": "scan",
+            "parent": "PresenceTracker",
+            "signature": "scan(self)"
+          },
+          {
+            "kind": "function",
+            "name": "rows",
+            "parent": "PresenceTracker",
+            "signature": "rows(self, usernames)"
+          }
+        ]
+      },
+      {
+        "path": "app/static/accounts.js",
+        "symbols": [
+          {
+            "kind": "const",
+            "name": "$",
+            "parent": "",
+            "signature": "const $ = (id)"
+          },
+          {
+            "kind": "function",
+            "name": "feedback",
+            "parent": "",
+            "signature": "function feedback(id, text)"
+          },
+          {
+            "kind": "function",
+            "name": "clearSecrets",
+            "parent": "",
+            "signature": "function clearSecrets()"
+          },
+          {
+            "kind": "function",
+            "name": "showLogin",
+            "parent": "",
+            "signature": "function showLogin()"
+          },
+          {
+            "kind": "function",
+            "name": "api",
+            "parent": "",
+            "signature": "async function api(url, method = 'GET', data = undefined)"
+          },
+          {
+            "kind": "function",
+            "name": "button",
+            "parent": "",
+            "signature": "function button(text, onClick, className = '')"
+          },
+          {
+            "kind": "function",
+            "name": "cell",
+            "parent": "",
+            "signature": "function cell(row, text, className)"
+          },
+          {
+            "kind": "function",
+            "name": "loadAccounts",
+            "parent": "",
+            "signature": "async function loadAccounts()"
+          },
+          {
+            "kind": "function",
+            "name": "generated",
+            "parent": "",
+            "signature": "async function generated()"
+          },
+          {
+            "kind": "const",
+            "name": "current",
+            "parent": "",
+            "signature": "const current = ()"
+          },
+          {
+            "kind": "function",
+            "name": "openEdit",
+            "parent": "",
+            "signature": "async function openEdit(action, account = null)"
+          },
+          {
+            "kind": "function",
+            "name": "openRemove",
+            "parent": "",
+            "signature": "function openRemove(account)"
+          },
+          {
+            "kind": "function",
+            "name": "operation",
+            "parent": "",
+            "signature": "async function operation(data, id, dialog)"
+          }
+        ]
+      },
+      {
+        "path": "app/tasks.py",
+        "symbols": [
+          {
+            "kind": "class",
+            "name": "OperationManager",
+            "parent": "",
+            "signature": "class OperationManager"
+          },
+          {
+            "kind": "function",
+            "name": "submit",
+            "parent": "OperationManager",
+            "signature": "submit(self, owner, job)"
+          },
+          {
+            "kind": "function",
+            "name": "progress",
+            "parent": "",
+            "signature": "progress(message)"
+          },
+          {
+            "kind": "function",
+            "name": "work",
+            "parent": "",
+            "signature": "work()"
+          },
+          {
+            "kind": "function",
+            "name": "get",
+            "parent": "OperationManager",
+            "signature": "get(self, task_id, owner)"
+          }
+        ]
+      },
+      {
+        "path": "app/verifier.py",
+        "symbols": [
+          {
+            "kind": "class",
+            "name": "FreshConnectVerifier",
+            "parent": "",
+            "signature": "class FreshConnectVerifier"
+          }
+        ]
+      },
+      {
+        "path": "scripts/public_snapshot.py",
+        "symbols": [
+          {
+            "kind": "const",
+            "name": "EXACT",
+            "parent": "",
+            "signature": "EXACT ="
+          },
+          {
+            "kind": "const",
+            "name": "PREFIXES",
+            "parent": "",
+            "signature": "PREFIXES = (\"app/\", \"docs/\", \"tests/\")"
+          },
+          {
+            "kind": "const",
+            "name": "INTERNAL",
+            "parent": "",
+            "signature": "INTERNAL = {\"tests/test_public_snapshot.py\"}"
+          },
+          {
+            "kind": "const",
+            "name": "PRIVATE",
+            "parent": "",
+            "signature": "PRIVATE = re.compile("
+          },
+          {
+            "kind": "const",
+            "name": "SECRET",
+            "parent": "",
+            "signature": "SECRET = re.compile("
+          },
+          {
+            "kind": "const",
+            "name": "RASTER",
+            "parent": "",
+            "signature": "RASTER = {\".png\", \".jpg\", \".jpeg\", \".ico\", \".webp\"}"
+          },
+          {
+            "kind": "function",
+            "name": "allowed",
+            "parent": "",
+            "signature": "allowed(name)"
+          },
+          {
+            "kind": "function",
+            "name": "export",
+            "parent": "",
+            "signature": "export(repo, revision, destination)"
+          }
+        ]
+      }
+    ]
+  },
+  "tests": [
+    "tests/conftest.py",
+    "tests/container_api_proof.py",
+    "tests/container_image_smoke.py",
+    "tests/prove_broker.py",
+    "tests/scratch_rig.py",
+    "tests/test_container_publishing.py",
+    "tests/test_final_edges.py",
+    "tests/test_notes_presence.py",
+    "tests/test_passwd.py",
+    "tests/test_presence_evidence.py",
+    "tests/test_public_snapshot.py",
+    "tests/test_recovery_edges.py",
+    "tests/test_review_regressions.py",
+    "tests/test_verifier_ui.py",
+    "tests/test_web_tasks.py",
+    "tests/ui_regressions.cjs"
+  ],
+  "operations": [
+    ".dockerignore",
+    ".env.example",
+    ".gitea/workflows/public-snapshot.yml",
+    ".github/workflows/container.yml",
+    "Dockerfile"
+  ],
+  "limitations": {
+    "unparsed_languages": [
+      "Shell"
+    ],
+    "excluded_dirs": [],
+    "code_map_truncated": false,
+    "code_map_symbols_capped": true,
+    "tracked_files_only": true
+  },
+  "generated": {
+    "source_commit": "cbee44f6b5e4b1fc27335eb160600824f9c3d0a2",
+    "content_hash": "1b1c942b61281a78",
+    "generator": "navgen"
+  }
+}
